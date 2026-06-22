@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:table_calendar/table_calendar.dart' hide OnDaySelected;
 
 import '../../../Core/Colors/app_colors.dart';
 import '../BLoC/booking_bloc.dart';
@@ -120,7 +121,7 @@ class BookingView extends StatelessWidget {
   // 3. قسم التاريخ والتقويم
   Widget _buildCalendarSection(AppColors colors) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(25),
@@ -135,10 +136,43 @@ class BookingView extends StatelessWidget {
               const Text("تاريخ الحجز", style: TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
-          const SizedBox(height: 15),
-          // هنا نضع ويدجت التقويم (Calendar Picker)
-          // ملاحظة: يُفضل استخدام حزمة table_calendar لنتائج مطابقة تماماً
-          const Placeholder(fallbackHeight: 200), // تمثيل للتقويم الموضح في الصورة
+          const SizedBox(height: 10),
+          BlocBuilder<BookingBloc, BookingState>(
+            builder: (context, state) {
+              return TableCalendar(
+                locale: 'ar', // لدعم اللغة العربية
+                firstDay: DateTime.utc(2024, 1, 1),
+                lastDay: DateTime.utc(2030, 12, 31),
+                focusedDay: state.selectedDate,
+                selectedDayPredicate: (day) => isSameDay(state.selectedDate, day),
+                onDaySelected: (selectedDay, focusedDay) {
+                  context.read<BookingBloc>().add(OnDaySelected(selectedDay, focusedDay));
+                },
+                // تخصيص التصميم ليطابق الصورة
+                headerStyle: const HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                  titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                calendarStyle: CalendarStyle(
+                  selectedDecoration: BoxDecoration(
+                    color: colors.primary, // اللون الكحلي المعتمد
+                    shape: BoxShape.circle,
+                  ),
+                  todayDecoration: BoxDecoration(
+                    color: colors.goldAccent.withOpacity(0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  defaultTextStyle: const TextStyle(fontSize: 14),
+                  weekendTextStyle: const TextStyle(color: Colors.red),
+                ),
+                daysOfWeekStyle: const DaysOfWeekStyle(
+                  weekdayStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  weekendStyle: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );

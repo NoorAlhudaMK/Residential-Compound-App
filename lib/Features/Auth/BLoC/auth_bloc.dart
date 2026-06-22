@@ -11,7 +11,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       try {
         await Future.delayed(Duration(seconds: 2));
 
-        if (event.username == "admin" && event.password == "1234") {
+        if (event.username == "7777777777" && event.password == "1234") {
           emit(AuthSuccess("أشرف شروفي"));
         } else {
           emit(AuthFailure("اسم المستخدم أو كلمة المرور غير صحيحة"));

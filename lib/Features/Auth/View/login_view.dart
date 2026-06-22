@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../../Core/Colors/app_colors.dart';
-import '../../../Core/Repository/dashboard_repository.dart';
-import '../../Dashboard/BLoC/dashboard_bloc.dart';
-import '../../Dashboard/BLoC/dashboard_event.dart';
-import '../../Dashboard/View/dashboard_view.dart';
+import '../../MainPage/View/main_home_page.dart';
 import '../BLoC/auth_event.dart';
 import '../BLoC/auth_bloc.dart';
 import '../BLoC/auth_state.dart';
@@ -19,10 +15,8 @@ class LoginView extends StatefulWidget {
 
 class _LoginViewState extends State<LoginView> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameController = TextEditingController(text: "admin");
+  final TextEditingController _usernameController = TextEditingController(text: "7777777777");
   final TextEditingController _passwordController = TextEditingController(text: "1234");
-
-  final bool isDark = true;
 
   @override
   void dispose() {
@@ -35,86 +29,137 @@ class _LoginViewState extends State<LoginView> {
   Widget build(BuildContext context) {
     final colors = AppColors();
 
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: colors.scaffoldBackground,
-        body: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-
-                Container(
-                  padding: const EdgeInsets.all(15),
-                  decoration: BoxDecoration(
-                    color: colors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
+    return SafeArea(
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Scaffold(
+          backgroundColor: colors.scaffoldBackground,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 30.0),
+              child: Column(
+                children: [
+                  const SizedBox(height: 15),
+                  // --- الشعار (Logo) ---
+                  Center(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: colors.primary.withOpacity(0.03),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(25),
+                          decoration: BoxDecoration(
+                            color: colors.primary,
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                          child: Icon(
+                            Icons.apartment_rounded,
+                            size: 50,
+                            color: colors.goldAccent,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Icon(Icons.shield_outlined, size: 50, color: colors.primary),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  "بوابة الأمن",
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: colors.textMain),
-                ),
-                const Text(
-                  "بوابة موظفي الأمن لعام 2026",
-                  style: TextStyle(fontSize: 12, color: Colors.grey, letterSpacing: 1.1),
-                ),
-                const SizedBox(height: 30),
-
-                Container(
-                  width: 400,
-                  decoration: BoxDecoration(
-                    color: colors.cardBackground,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border(top: BorderSide(color: colors.primary, width: 5)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
-                        blurRadius: 30,
-                        offset: const Offset(0, 10),
-                      )
-                    ],
+                  const SizedBox(height: 15),
+                  Text(
+                    "مجمعي",
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: colors.primary,
+                    ),
                   ),
-                  padding: const EdgeInsets.all(32),
-                  child: Form(
-                    key: _formKey,
+                  Text(
+                    "نظام إدارة المجمع السكني",
+                    style: TextStyle(fontSize: 14, color: colors.textSecondary),
+                  ),
+
+                  const SizedBox(height: 15),
+                  // --- نصوص الترحيب ---
+                  Align(
+                    alignment: Alignment.centerRight,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildLabel("رقم الموظف", colors),
-                        const SizedBox(height: 8),
+                        Text(
+                          "مرحباً بعودتك",
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: colors.primary,
+                          ),
+                        ),
+                        Text(
+                          "سجّل دخولك للمتابعة",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: colors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 30),
+                  // --- نموذج تسجيل الدخول ---
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        _buildLabel("رقم الهاتف", colors),
+                        const SizedBox(height: 10),
                         TextFormField(
                           controller: _usernameController,
-                          style: TextStyle(color: colors.textMain),
-                          decoration: _inputDecoration(colors, "أدخل رقمك الوظيفي...", Icons.person_outline),
-                          validator: (value) => value!.isEmpty ? "يرجى إدخال الرقم" : null,
+                          keyboardType: TextInputType.phone,
+                          textAlign: TextAlign.left, // للأرقام
+                          decoration: _inputDecoration(
+                            colors,
+                            "7XX XXX XXXX",
+                            Icons.phone_outlined,
+                            isPhone: true,
+                          ),
                         ),
                         const SizedBox(height: 20),
 
                         _buildLabel("كلمة المرور", colors),
-                        const SizedBox(height: 8),
-
+                        const SizedBox(height: 10),
+                        // داخل TextFormField الخاص بكلمة المرور
                         BlocBuilder<AuthBloc, AuthState>(
-                          buildWhen: (previous, current) => current is AuthInitial,
+                          // هنا نتأكد من إعادة البناء فقط عند تغير حالة الرؤية
+                          buildWhen: (previous, current) {
+                            if (previous is AuthInitial &&
+                                current is AuthInitial) {
+                              return previous.isPasswordVisible !=
+                                  current.isPasswordVisible;
+                            }
+                            return true;
+                          },
                           builder: (context, state) {
+                            // نفترض أن الحالة الافتراضية هي الإخفاء (true)
                             bool isObscured = true;
+
                             if (state is AuthInitial) {
                               isObscured = state.isPasswordVisible;
                             }
 
                             return TextFormField(
                               controller: _passwordController,
-                              obscureText: isObscured,
+                              obscureText: isObscured, // هذه هي النقطة المحورية
                               style: TextStyle(color: colors.textMain),
                               decoration: _inputDecoration(
                                 colors,
                                 "••••••••",
                                 Icons.lock_outline,
                                 suffixWidget: IconButton(
+                                  // تغيير الأيقونة بناءً على الحالة
                                   icon: Icon(
                                     isObscured
                                         ? Icons.visibility_off_outlined
@@ -122,59 +167,94 @@ class _LoginViewState extends State<LoginView> {
                                     color: colors.textSecondary,
                                   ),
                                   onPressed: () {
-                                    context.read<AuthBloc>().add(TogglePasswordVisibility());
+                                    // إرسال الأيفينت للـ Bloc
+                                    context.read<AuthBloc>().add(
+                                      TogglePasswordVisibility(),
+                                    );
                                   },
                                 ),
                               ),
-                              validator: (value) => value!.isEmpty ? "يرجى إدخال كلمة المرور" : null,
                             );
                           },
                         ),
 
-                        const SizedBox(height: 20),
-                        Text("هل نسيت كلمة المرور؟", style: TextStyle(color: colors.primary, fontSize: 13, fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 20),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton(
+                            onPressed: () {},
+                            child: Text(
+                              "نسيت كلمة المرور؟",
+                              style: TextStyle(
+                                color: colors.goldAccent,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
 
+                        const SizedBox(height: 20),
+                        // --- زر تسجيل الدخول ---
                         BlocConsumer<AuthBloc, AuthState>(
                           listener: (context, state) {
                             if (state is AuthSuccess) {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("مرحباً بك: ${state.guardName}")));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    "مرحباً بك: ${state.guardName}",
+                                  ),
+                                ),
+                              );
 
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => BlocProvider(
-                                    create: (context) => DashboardBloc(DashboardRepository())..add(FetchDashboardData()),
-                                    child: const DashboardView(),
-                                  ),
+                                  builder: (context) => MainHomePage(),
                                 ),
                               );
                             } else if (state is AuthFailure) {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.errorMessage), backgroundColor: Colors.red));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(state.errorMessage),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
                             }
                           },
                           builder: (context, state) {
-                            if (state is AuthLoading) return Center(child: CircularProgressIndicator(color: colors.primary));
-
+                            if (state is AuthLoading) {
+                              return CircularProgressIndicator(
+                                color: colors.primary,
+                              );
+                            }
                             return SizedBox(
                               width: double.infinity,
-                              height: 55,
+                              height: 60,
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: colors.primary,
-                                  foregroundColor: isDark ? Colors.black : Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
                                   elevation: 0,
                                 ),
                                 onPressed: () {
                                   if (_formKey.currentState!.validate()) {
-                                    context.read<AuthBloc>().add(LoginSubmitted(
+                                    context.read<AuthBloc>().add(
+                                      LoginSubmitted(
                                         username: _usernameController.text,
-                                        password: _passwordController.text
-                                    ));
+                                        password: _passwordController.text,
+                                      ),
+                                    );
                                   }
                                 },
-                                child: const Text("تسجيل الدخول", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                child: const Text(
+                                  "تسجيل الدخول",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                             );
                           },
@@ -182,11 +262,52 @@ class _LoginViewState extends State<LoginView> {
                       ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 30),
-                Text("نظام إدارة أمن المجمع السكني", style: TextStyle(color: colors.textSecondary, fontSize: 12)),
-                Text("${DateTime.now().year} © All Rights Reserved AIVIO LTD", style: TextStyle(color: colors.textSecondary, fontSize: 12)),
-              ],
+
+                  // const SizedBox(height: 20),
+                  // Text("أو", style: TextStyle(color: colors.textSecondary)),
+                  // const SizedBox(height: 20),
+
+                  // --- زر البصمة ---
+                  // Container(
+                  //   width: double.infinity,
+                  //   height: 60,
+                  //   decoration: BoxDecoration(
+                  //     color: colors.secondaryBtnBg,
+                  //     borderRadius: BorderRadius.circular(18),
+                  //     border: Border.all(color: colors.inputBorder),
+                  //   ),
+                  //   child: Row(
+                  //     mainAxisAlignment: MainAxisAlignment.center,
+                  //     children: [
+                  //       Icon(Icons.fingerprint, color: colors.goldAccent),
+                  //       const SizedBox(width: 10),
+                  //       Text("الدخول ببصمة الإصبع",
+                  //           style: TextStyle(color: colors.primary, fontWeight: FontWeight.w600)),
+                  //     ],
+                  //   ),
+                  // ),
+                  const SizedBox(height: 15),
+                  TextButton(
+                    onPressed: () {},
+                    child: RichText(
+                      text: TextSpan(
+                        text: "لا تملك حساباً؟ ",
+                        style: TextStyle(color: colors.textSecondary),
+                        children: [
+                          TextSpan(
+                            text: "تواصل مع الإدارة",
+                            style: TextStyle(
+                              color: colors.goldAccent,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
         ),
@@ -195,25 +316,55 @@ class _LoginViewState extends State<LoginView> {
   }
 
   Widget _buildLabel(String text, AppColors colors) {
-    return Text(text, style: TextStyle(color: colors.textMain, fontSize: 14, fontWeight: FontWeight.w600));
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Text(
+        text,
+        style: TextStyle(
+          color: colors.primary,
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
   }
 
-  InputDecoration _inputDecoration(AppColors colors, String hint, IconData icon, {Widget? suffixWidget}) {
+  InputDecoration _inputDecoration(
+    AppColors colors,
+    String hint,
+    IconData icon, {
+    Widget? suffixWidget,
+    bool isPhone = false,
+  }) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: colors.textSecondary.withOpacity(0.5), fontSize: 14),
-      prefixIcon: Icon(icon, color: colors.textSecondary),
+      prefixIcon: isPhone
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(width: 15),
+                Icon(icon, color: colors.goldAccent),
+                const SizedBox(width: 10),
+                Text(
+                  "+964 | ",
+                  style: TextStyle(
+                    color: colors.textSecondary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            )
+          : Icon(icon, color: colors.goldAccent),
       suffixIcon: suffixWidget,
       filled: true,
       fillColor: colors.inputFill,
-      contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(18),
         borderSide: BorderSide(color: colors.inputBorder),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: colors.primary, width: 1.5),
+        borderRadius: BorderRadius.circular(18),
+        borderSide: BorderSide(color: colors.primary, width: 1),
       ),
     );
   }
