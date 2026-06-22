@@ -5,13 +5,29 @@ import 'booking_state.dart';
 
 class BookingBloc extends Bloc<BookingEvent, BookingState> {
   BookingBloc() : super(BookingState(selectedDate: DateTime.now())) {
-    on<SelectFacility>((event, emit) => emit(BookingState(
-      selectedFacilityIndex: event.index,
-      selectedDate: state.selectedDate,
-    )));
-    on<SelectDate>((event, emit) => emit(BookingState(
-      selectedFacilityIndex: state.selectedFacilityIndex,
-      selectedDate: event.date,
-    )));
+    on<SelectFacility>(
+      (event, emit) => emit(
+        BookingState(
+          selectedFacilityIndex: event.index,
+          selectedDate: state.selectedDate,
+        ),
+      ),
+    );
+
+    on<SelectDate>(
+      (event, emit) => emit(
+        BookingState(
+          selectedFacilityIndex: state.selectedFacilityIndex,
+          selectedDate: event.date,
+        ),
+      ),
+    );
+
+    on<OnDaySelected>((event, emit) {
+      emit(BookingState(
+        selectedDate: event.selectedDay,
+        selectedFacilityIndex: state.selectedFacilityIndex,
+      ));
+    });
   }
 }
