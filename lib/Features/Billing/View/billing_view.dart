@@ -247,14 +247,6 @@ class BillingView extends StatelessWidget {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
-      leading: IconButton(
-        icon: const Icon(
-          Icons.arrow_back_ios,
-          color: Color(0xFF102C57),
-          size: 18,
-        ),
-        onPressed: () => Navigator.pop(context),
-      ),
       title: const Text(
         "الفواتير والمدفوعات",
         style: TextStyle(
@@ -264,6 +256,8 @@ class BillingView extends StatelessWidget {
         ),
       ),
       centerTitle: true,
+      automaticallyImplyActions: false,
+      automaticallyImplyLeading: false,
     );
   }
 

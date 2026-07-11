@@ -27,6 +27,7 @@ class MaintenanceView extends StatelessWidget {
             automaticallyImplyLeading: false,
             title: Text("الصيانة والخدمات", style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold)),
             centerTitle: true,
+            automaticallyImplyActions: false,
             actions: [
               GestureDetector(
                 onTap: () {

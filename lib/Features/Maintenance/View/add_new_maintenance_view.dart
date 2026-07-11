@@ -28,6 +28,8 @@ class NewMaintenanceRequestView extends StatelessWidget {
             style: TextStyle(color: Color(0xFF102C57), fontWeight: FontWeight.bold, fontSize: 18),
           ),
           centerTitle: true,
+          automaticallyImplyActions: false,
+          automaticallyImplyLeading: false,
         ),
         body: BlocBuilder<MaintenanceBloc, MaintenanceState>(
           builder: (context, state) {

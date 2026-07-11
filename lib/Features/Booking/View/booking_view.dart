@@ -23,6 +23,9 @@ class BookingView extends StatelessWidget {
             backgroundColor: Colors.transparent,
             elevation: 0,
             title: Text("المرافق والحجوزات", style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold)),
+            centerTitle: true,
+            automaticallyImplyActions: false,
+            automaticallyImplyLeading: false,
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(20),

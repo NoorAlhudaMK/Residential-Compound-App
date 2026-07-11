@@ -50,6 +50,8 @@ class VisitorView extends StatelessWidget {
                   ),
                 ),
                 centerTitle: true,
+                automaticallyImplyActions: false,
+                automaticallyImplyLeading: false,
               ),
               body: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
