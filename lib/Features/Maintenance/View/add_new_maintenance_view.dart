@@ -73,7 +73,10 @@ class NewMaintenanceRequestView extends StatelessWidget {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                       ),
                       onPressed: () {
-                        // منطق الإرسال النهائي عبر البلوك
+                        context.read<MaintenanceBloc>().add(SubmitTicket(
+                          subject: state.selectedService, // أو عنوان يتم إدخاله
+                          description: state.descriptionText, // النص الذي قمت بحفظه
+                        ));
                         Navigator.pop(context);
                       },
                       child: const Text(
@@ -191,7 +194,7 @@ class NewMaintenanceRequestView extends StatelessWidget {
           TextField(
             maxLines: 4,
             onChanged: (text) {
-              context.read<MaintenanceBloc>().add(UpdateDescription(text.length));
+              context.read<MaintenanceBloc>().add(UpdateDescriptionText(text));
             },
             decoration: const InputDecoration(
               border: InputBorder.none,

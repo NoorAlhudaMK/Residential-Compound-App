@@ -1,33 +1,49 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../Core/CacheManager/cache_manager.dart';
+import '../../../Data/Repositories/auth_repository.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  AuthBloc() : super(AuthInitial()) {
+  final AuthRepository authRepository;
+
+  AuthBloc({required this.authRepository}) : super(AuthInitial()) {
 
     on<LoginSubmitted>((event, emit) async {
       emit(AuthLoading());
-
       try {
-        await Future.delayed(Duration(seconds: 2));
+        final loginResponse = await authRepository.login(event.username, event.password);
 
-        if (event.username == "7777777777" && event.password == "1234") {
-          emit(AuthSuccess("أشرف شروفي"));
-        } else {
-          emit(AuthFailure("اسم المستخدم أو كلمة المرور غير صحيحة"));
-        }
+        final user = await authRepository.fetchAndCacheUserProfile(loginResponse.token!);
+
+        await CacheManager.saveUserData(user);
+        emit(AuthSuccess(user.name));
       } catch (e) {
-        emit(AuthFailure("حدث خطأ في الاتصال بالسيرفر"));
+        emit(AuthFailure(e.toString()));
       }
     });
 
-    on<LogoutRequested>((event, emit) {
-      emit(AuthInitial());
+    on<LogoutRequested>((event, emit) async {
+      emit(AuthLoading());
+      try {
+        String? token = await CacheManager.getToken();
+
+        if (token != null) {
+          await authRepository.logout(token);
+        }
+
+        await CacheManager.clearAll();
+
+        emit(AuthInitial());
+      } catch (e) {
+        await CacheManager.clearAll();
+        emit(AuthInitial());
+      }
     });
 
     on<TogglePasswordVisibility>((event, emit) {
-      if (state is AuthInitial) {
-        final currentState = state as AuthInitial;
+      final currentState = state;
+      if (currentState is AuthInitial) {
         emit(AuthInitial(isPasswordVisible: !currentState.isPasswordVisible));
       }
     });

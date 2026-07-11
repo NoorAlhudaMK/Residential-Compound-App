@@ -1,9 +1,12 @@
+import '../../../Data/Models/invoice_model.dart';
+import '../../../Data/Models/payment_model.dart';
+
 enum BillingStatus { initial, loading, success, failure }
 
 class BillingState {
-  final List<Map<String, dynamic>> bills; // الفواتير المستحقة
-  final List<Map<String, dynamic>> paidBills; // الفواتير المدفوعة
-  final Set<String> selectedBillIds;
+  late final List<InvoiceModel> bills; // الفواتير المستحقة
+  final List<PaymentModel> paidBills; // الفواتير المدفوعة
+  late final Set<String> selectedBillIds;
   final BillingStatus status;
   final double totalDue;
   final int selectedTab; // 0 للمستحقة، 1 للمدفوعة
@@ -19,13 +22,15 @@ class BillingState {
 
   double get selectedTotal {
     return bills
-        .where((bill) => selectedBillIds.contains(bill['id']))
-        .fold(0.0, (sum, bill) => sum + bill['amount']);
+        .where((bill) => selectedBillIds.contains(bill.id.toString()))
+        .fold(0.0, (sum, bill) => sum + bill.amountTotal);
   }
 
+  double get totalUnpaidAmount => bills.fold(0.0, (sum, bill) => sum + bill.amountTotal);
+
   BillingState copyWith({
-    List<Map<String, dynamic>>? bills,
-    List<Map<String, dynamic>>? paidBills,
+    List<InvoiceModel>? bills,
+    List<PaymentModel>? paidBills,
     Set<String>? selectedBillIds,
     BillingStatus? status,
     double? totalDue,

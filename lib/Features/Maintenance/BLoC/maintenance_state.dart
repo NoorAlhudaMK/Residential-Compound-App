@@ -1,12 +1,14 @@
 import 'dart:io';
+import '../../../Data/Models/maintenance_ticket_model.dart';
+import '../../../Data/Models/status_model.dart';
 
 class MaintenanceState {
-  final List<Map<String, dynamic>> activeRequests;
-  final List<Map<String, dynamic>> pastRequests;
+  final List<MaintenanceTicketModel> activeRequests;
+  final List<MaintenanceTicketModel> pastRequests;
+  final List<StatusModel> statuses;
+  final String descriptionText;
   final bool isLoading;
   final int rating;
-
-  // الحقول الجديدة
   final List<File> selectedImages;
   final String selectedService;
   final int descriptionLength;
@@ -14,6 +16,8 @@ class MaintenanceState {
   MaintenanceState({
     this.activeRequests = const [],
     this.pastRequests = const [],
+    this.statuses = const [],
+    this.descriptionText = "",
     this.isLoading = false,
     this.selectedImages = const [],
     this.selectedService = "كهرباء",
@@ -21,10 +25,11 @@ class MaintenanceState {
     this.rating = 0,
   });
 
-  // دالة copyWith لتحديث الـ State
   MaintenanceState copyWith({
-    List<Map<String, dynamic>>? activeRequests,
-    List<Map<String, dynamic>>? pastRequests,
+    List<MaintenanceTicketModel>? activeRequests,
+    List<MaintenanceTicketModel>? pastRequests,
+    List<StatusModel>? statuses,
+    String? descriptionText,
     bool? isLoading,
     List<File>? selectedImages,
     String? selectedService,
@@ -34,6 +39,8 @@ class MaintenanceState {
     return MaintenanceState(
       activeRequests: activeRequests ?? this.activeRequests,
       pastRequests: pastRequests ?? this.pastRequests,
+      descriptionText: descriptionText ?? this.descriptionText,
+      statuses: statuses ?? this.statuses,
       isLoading: isLoading ?? this.isLoading,
       selectedImages: selectedImages ?? this.selectedImages,
       selectedService: selectedService ?? this.selectedService,

@@ -9,9 +9,9 @@ class SelectService extends MaintenanceEvent {
   SelectService(this.service);
 }
 
-class UpdateDescription extends MaintenanceEvent {
-  final int length;
-  UpdateDescription(this.length);
+class UpdateDescriptionText extends MaintenanceEvent {
+  final String text;
+  UpdateDescriptionText(this.text);
 }
 
 class AddImage extends MaintenanceEvent {
@@ -27,4 +27,22 @@ class RemoveImage extends MaintenanceEvent {
 class UpdateRating extends MaintenanceEvent {
   final int rating;
   UpdateRating(this.rating);
+}
+
+class SubmitTicket extends MaintenanceEvent {
+  final String subject;
+  final String description;
+  SubmitTicket({required this.subject, required this.description});
+}
+
+class RateTicket extends MaintenanceEvent {
+  final int ticketId;
+  final int rating;
+  final String feedback;
+
+  RateTicket({
+    required this.ticketId,
+    required this.rating,
+    required this.feedback,
+  });
 }

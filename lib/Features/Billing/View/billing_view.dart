@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:residential_compound_app/Data/Models/invoice_model.dart';
+import 'package:residential_compound_app/Data/Repositories/payment_reopsitory.dart';
 import '../../../Core/FormattedDateTime/formatted_price.dart';
 import '../BLoC/billing_bloc.dart';
 import '../BLoC/billing_event.dart';
@@ -11,7 +13,8 @@ class BillingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => BillingBloc()..add(LoadBills()),
+      create: (context) =>
+          BillingBloc(repository: PaymentRepository())..add(LoadBills()),
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: Scaffold(
@@ -37,12 +40,11 @@ class BillingView extends StatelessWidget {
                             _buildTabSwitcher(context, state),
                             const SizedBox(height: 25),
 
-                            // عرض المحتوى بناءً على التاب المختار
                             state.selectedTab == 0
                                 ? _buildUnpaidSection(context, state)
                                 : _buildPaidSection(state),
 
-                            const SizedBox(height: 120), // مساحة للـ Bottom Bar
+                            const SizedBox(height: 150),
                           ]),
                         ),
                       ),
@@ -50,7 +52,8 @@ class BillingView extends StatelessWidget {
                   ),
 
                   // إظهار شريط الدفع فقط في تاب "المستحقة"
-                  if (state.selectedTab == 0) _buildBottomPaymentBar(context, state),
+                  if (state.selectedTab == 0)
+                    _buildBottomPaymentBar(context, state),
                 ],
               );
             },
@@ -68,37 +71,73 @@ class BillingView extends StatelessWidget {
       children: [
         _buildSelectionHeader(context, state),
         const SizedBox(height: 15),
-        ...state.bills.map((bill) => _buildUnpaidBillCard(context, bill, state)),
+        ...state.bills.map(
+          (bill) => _buildUnpaidBillCard(context, bill, state),
+        ),
       ],
     );
   }
 
   Widget _buildPaidSection(BillingState state) {
     if (state.paidBills.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.only(top: 50),
-          child: Column(
-            children: [
-              Icon(Icons.receipt_long_outlined, size: 60, color: Colors.grey.shade300),
-              const SizedBox(height: 10),
-              const Text("لا توجد فواتير مدفوعة سابقاً", style: TextStyle(color: Colors.grey)),
-            ],
-          ),
-        ),
-      );
+      return const Center(child: Text("لا توجد فواتير مدفوعة"));
     }
     return Column(
-      children: state.paidBills.map((bill) => _buildPaidBillCard(bill)).toList(),
+      children: state.paidBills
+          .map(
+            (payment) => Container(
+              margin: const EdgeInsets.only(bottom: 15),
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.green),
+                  const SizedBox(width: 15),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          payment.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          payment.paymentDate,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    "${payment.amount} ${payment.currency}",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 
   // --- تصميم البطاقات (Cards) ---
 
-  Widget _buildUnpaidBillCard(BuildContext context, Map<String, dynamic> bill, BillingState state) {
-    bool isSelected = state.selectedBillIds.contains(bill['id']);
+  Widget _buildUnpaidBillCard(
+    BuildContext context,
+    InvoiceModel bill,
+    BillingState state,
+  ) {
+    bool isSelected = state.selectedBillIds.contains(bill.id.toString());
     return GestureDetector(
-      onTap: () => context.read<BillingBloc>().add(ToggleBillSelection(bill['id'])),
+      onTap: () => context.read<BillingBloc>().add(
+        ToggleBillSelection(bill.id.toString()),
+      ),
       child: Container(
         margin: const EdgeInsets.only(bottom: 15),
         padding: const EdgeInsets.all(18),
@@ -106,7 +145,9 @@ class BillingView extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFFFFB300) : const Color(0xFFF1F5F9),
+            color: isSelected
+                ? const Color(0xFFFFB300)
+                : const Color(0xFFF1F5F9),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -120,8 +161,17 @@ class BillingView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(bill['title'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                  Text(bill['date'], style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  Text(
+                    bill.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  Text(
+                    bill.dueDate,
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
                 ],
               ),
             ),
@@ -153,16 +203,37 @@ class BillingView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(bill['title'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                Text(bill['paidDate'], style: const TextStyle(color: Color(0xFF4CAF50), fontSize: 11)),
+                Text(
+                  bill['title'],
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+                Text(
+                  bill['paidDate'],
+                  style: const TextStyle(
+                    color: Color(0xFF4CAF50),
+                    fontSize: 11,
+                  ),
+                ),
               ],
             ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text("${formatNumber(double.parse(bill['amount'].toString()))} د.ع", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              Text(bill['date'], style: const TextStyle(color: Colors.grey, fontSize: 11)),
+              Text(
+                "${formatNumber(double.parse(bill['amount'].toString()))} د.ع",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              Text(
+                bill['date'],
+                style: const TextStyle(color: Colors.grey, fontSize: 11),
+              ),
             ],
           ),
         ],
@@ -177,11 +248,21 @@ class BillingView extends StatelessWidget {
       backgroundColor: Colors.white,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF102C57), size: 18),
+        icon: const Icon(
+          Icons.arrow_back_ios,
+          color: Color(0xFF102C57),
+          size: 18,
+        ),
         onPressed: () => Navigator.pop(context),
       ),
-      title: const Text("الفواتير والمدفوعات",
-          style: TextStyle(color: Color(0xFF102C57), fontWeight: FontWeight.bold, fontSize: 18)),
+      title: const Text(
+        "الفواتير والمدفوعات",
+        style: TextStyle(
+          color: Color(0xFF102C57),
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
+        ),
+      ),
       centerTitle: true,
     );
   }
@@ -201,9 +282,18 @@ class BillingView extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("إجمالي الفواتير المستحقة", style: TextStyle(color: Colors.white70, fontSize: 13)),
-                  Text("${formatNumber(double.parse(state.totalDue.toString()))} د.ع",
-                      style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "إجمالي الفواتير المستحقة",
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                  Text(
+                    "${formatNumber(double.parse(state.totalUnpaidAmount.toString()))} د.ع",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
               _buildLateBadge(),
@@ -215,13 +305,19 @@ class BillingView extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("فواتير غير مدفوعة 4", style: TextStyle(color: Colors.white, fontSize: 14)),
-              TextButton(
-                onPressed: () {},
-                child: const Text("عرض السجل", style: TextStyle(color: Color(0xFFFFB300))),
-              )
+              Text(
+                "فواتير غير مدفوعة  ${state.bills.length}",
+                style: TextStyle(color: Colors.white, fontSize: 14),
+              ),
+              // TextButton(
+              //   onPressed: () {},
+              //   child: const Text(
+              //     "عرض السجل",
+              //     style: TextStyle(color: Color(0xFFFFB300)),
+              //   ),
+              // ),
             ],
-          )
+          ),
         ],
       ),
     );
@@ -230,17 +326,25 @@ class BillingView extends StatelessWidget {
   Widget _buildTabSwitcher(BuildContext context, BillingState state) {
     return Container(
       padding: const EdgeInsets.all(5),
-      decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(15)),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(15),
+      ),
       child: Row(
         children: [
-          _buildTab(context, "مستحقة (4)", state.selectedTab == 0, 0),
+          _buildTab(context, "مستحقة (${state.bills.length})", state.selectedTab == 0, 0),
           _buildTab(context, "مدفوعة", state.selectedTab == 1, 1),
         ],
       ),
     );
   }
 
-  Widget _buildTab(BuildContext context, String label, bool isActive, int index) {
+  Widget _buildTab(
+    BuildContext context,
+    String label,
+    bool isActive,
+    int index,
+  ) {
     return Expanded(
       child: GestureDetector(
         onTap: () => context.read<BillingBloc>().add(ChangeTab(index)),
@@ -249,11 +353,23 @@ class BillingView extends StatelessWidget {
           decoration: BoxDecoration(
             color: isActive ? Colors.white : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: isActive ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5)] : null,
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 5,
+                    ),
+                  ]
+                : null,
           ),
-          child: Text(label, textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                  color: isActive ? const Color(0xFF102C57) : Colors.grey)),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+              color: isActive ? const Color(0xFF102C57) : Colors.grey,
+            ),
+          ),
         ),
       ),
     );
@@ -261,12 +377,20 @@ class BillingView extends StatelessWidget {
 
   Widget _buildBottomPaymentBar(BuildContext context, BillingState state) {
     return Positioned(
-      bottom: 0, left: 0, right: 0,
+      bottom: 0,
+      left: 0,
+      right: 0,
       child: Container(
         padding: const EdgeInsets.all(25),
         decoration: BoxDecoration(
           color: Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
+            ),
+          ],
           borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         ),
         child: Column(
@@ -278,12 +402,21 @@ class BillingView extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("المختار (${state.selectedBillIds.length})", style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                    Text("${formatNumber(state.selectedTotal)}  د.ع",
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF102C57))),
+                    Text(
+                      "المختار (${state.selectedBillIds.length})",
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                    Text(
+                      "${formatNumber(state.selectedTotal)}  د.ع",
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF102C57),
+                      ),
+                    ),
                   ],
                 ),
-                _buildApplePay()
+                _buildApplePay(),
               ],
             ),
             const SizedBox(height: 15),
@@ -292,9 +425,18 @@ class BillingView extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF102C57),
                 minimumSize: const Size(double.infinity, 55),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
               ),
-              child: const Text("ادفع الآن", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              child: const Text(
+                "ادفع الآن",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
@@ -305,50 +447,75 @@ class BillingView extends StatelessWidget {
   // --- أدوات مساعدة إضافية ---
   Widget _buildCustomCheckbox(bool isSelected) {
     return Container(
-      width: 22, height: 22,
+      width: 22,
+      height: 22,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: isSelected ? const Color(0xFFFFB300) : Colors.transparent,
-        border: Border.all(color: isSelected ? const Color(0xFFFFB300) : Colors.grey.shade300),
+        border: Border.all(
+          color: isSelected ? const Color(0xFFFFB300) : Colors.grey.shade300,
+        ),
       ),
-      child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 14) : null,
+      child: isSelected
+          ? const Icon(Icons.check, color: Colors.white, size: 14)
+          : null,
     );
   }
 
-  Widget _buildServiceIcon(Map<String, dynamic> bill) {
+  Widget _buildServiceIcon(InvoiceModel bill) {
     return Container(
       padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(color: Color(bill['color']).withOpacity(0.1), shape: BoxShape.circle),
-      child: Icon(IconData(bill['icon'], fontFamily: 'MaterialIcons'), color: Color(bill['color']), size: 20),
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.1),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(Icons.eighteen_mp_rounded, color: Colors.blue, size: 20),
     );
   }
 
-  Widget _buildPriceAndStatus(Map<String, dynamic> bill) {
-    bool isLate = bill['status'].contains('متأخرة');
+  Widget _buildPriceAndStatus(InvoiceModel bill) {
+    bool isLate = bill.paymentState.contains('not_paid');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Text("${formatNumber(double.parse(bill['amount'].toString()))} د.ع", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-        Text(bill['status'], style: TextStyle(color: isLate ? Colors.red : Colors.orange, fontSize: 10)),
+        Text(
+          "${formatNumber(double.parse(bill.amountTotal.toString()))} د.ع",
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+        ),
+        Text(
+          bill.paymentState,
+          style: TextStyle(
+            color: isLate ? Colors.red : Colors.orange,
+            fontSize: 10,
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildSelectionHeader(BuildContext context, BillingState state) {
     // التحقق هل جميع الفواتير مختارة حالياً؟
-    bool isAllSelected = state.selectedBillIds.length == state.bills.length && state.bills.isNotEmpty;
+    bool isAllSelected =
+        state.selectedBillIds.length == state.bills.length &&
+        state.bills.isNotEmpty;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text("حدد الفواتير لدفعها معاً", style: TextStyle(color: Colors.grey, fontSize: 12)),
+        const Text(
+          "حدد الفواتير لدفعها معاً",
+          style: TextStyle(color: Colors.grey, fontSize: 12),
+        ),
         TextButton(
           onPressed: () {
             context.read<BillingBloc>().add(SelectAllBills(!isAllSelected));
           },
           child: Text(
             isAllSelected ? "إلغاء الكل" : "تحديد الكل",
-            style: const TextStyle(color: Color(0xFFFFB300), fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Color(0xFFFFB300),
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ],
@@ -358,7 +525,10 @@ class BillingView extends StatelessWidget {
   Widget _buildLateBadge() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(
+        color: Colors.white12,
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: const Row(
         children: [
           Icon(Icons.warning_amber_rounded, color: Color(0xFFFFB300), size: 14),
@@ -372,12 +542,18 @@ class BillingView extends StatelessWidget {
   Widget _buildApplePay() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: const Color(0xFFFFF9E7), borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF9E7),
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: const Row(
         children: [
           Icon(Icons.apple, size: 18),
           SizedBox(width: 5),
-          Text("Apple Pay متاح", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+          Text(
+            "Apple Pay متاح",
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+          ),
         ],
       ),
     );

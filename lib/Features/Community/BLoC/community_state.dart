@@ -1,7 +1,9 @@
+import '../../../Data/Models/announcement_model.dart';
+
 enum CommunityStatus { initial, loading, success, failure }
 
 class CommunityState {
-  final List<Map<String, dynamic>> announcements;
+  final List<AnnouncementModel> announcements;
   final CommunityStatus status;
   final String? errorMessage;
 
@@ -12,7 +14,7 @@ class CommunityState {
   });
 
   CommunityState copyWith({
-    List<Map<String, dynamic>>? announcements,
+    final List<AnnouncementModel>? announcements,
     CommunityStatus? status,
     String? errorMessage,
   }) {

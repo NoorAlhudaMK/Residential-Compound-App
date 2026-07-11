@@ -59,8 +59,8 @@ class MainHomePage extends StatelessWidget {
                     label: "الصيانة",
                   ),
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.calendar_month_sharp),
-                    label: "المرافق",
+                    icon: Icon(Icons.payment),
+                    label: "الفواتير",
                   ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.people_outlined),

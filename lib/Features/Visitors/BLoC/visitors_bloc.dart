@@ -1,44 +1,104 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'dart:math';
-import 'package:intl/intl.dart';
-
+import '../../../Core/CacheManager/cache_manager.dart';
+import '../../../Data/Repositories/visitor_repository.dart';
 import 'visitors_event.dart';
 import 'visitors_state.dart';
 
 class VisitorBloc extends Bloc<VisitorEvent, VisitorState> {
-  VisitorBloc() : super(VisitorState()) {
+  final VisitorRepository repository;
 
-    on<ToggleTab>((event, emit) {
-      List<Map<String, dynamic>> history = [];
-      if (event.index == 0) {
-        history = [
-          {"name": "أشرف شروفي", "type": "عائلة", "time": "8:30 ص", "status": "زيارة منتظرة", "icon": Icons.family_restroom},
-          {"name": "محمد العبدالله", "type": "توصيل", "time": "10:30 ص", "status": "تم الدخول", "icon": Icons.delivery_dining},
-          {"name": "سارة الخالدي", "type": "عائلة", "time": "أمس، 08:00 م", "status": "مكتمل", "icon": Icons.family_restroom},
-          {"name": "شاكر مشكور الشكراني", "type": "صيانة", "time": "14 أبريل", "status": "ملغي", "icon": Icons.build_outlined},
-        ];
+  VisitorBloc({required this.repository}) : super(VisitorState()) {
+    on<FetchVisitors>((event, emit) async {
+      try {
+        final token = await CacheManager.getToken();
+
+        if (token == null) {
+          emit(state.copyWith(visitHistory: [], isGenerating: false));
+          return;
+        }
+
+        final visitors = await repository.getVisitors(token);
+
+        emit(state.copyWith(visitHistory: visitors ?? [], isGenerating: false));
+
+      } catch (e) {
+        debugPrint("Error fetching visitors: $e");
+        emit(state.copyWith(isGenerating: false));
       }
-      emit(VisitorState(activeTab: event.index, visitHistory: history));
     });
 
-    on<GeneratePermit>((event, emit) async {
+    on<ToggleTab>((event, emit) {
+      emit(state.copyWith(activeTab: event.index));
+    });
+
+    on<CreateVisitor>((event, emit) async {
       emit(state.copyWith(isGenerating: true));
 
-      await Future.delayed(const Duration(seconds: 1));
+      try {
+        final user = await CacheManager.getUserModel();
 
-      DateTime now = DateTime.now();
-      String datePart = DateFormat('yyyyMMdd').format(now);
+        final residentId = (user.residentProfiles.isNotEmpty)
+            ? user.residentProfiles.first.id
+            : null;
 
-      String randomPart = (Random().nextInt(900000) + 100000).toString();
+        if (residentId == null) {
+          emit(state.copyWith(isGenerating: false));
+          return;
+        }
 
-      String finalQrData = datePart + randomPart;
+        final token = await CacheManager.getToken();
 
+        final newVisitor = await repository.addVisitor(
+          token: token!,
+          name: event.name,
+          phone: event.phone,
+          unitId: event.unitId,
+          validFrom: event.validFrom,
+          validTo: event.validTo,
+          hasCar: event.hasCar,
+          carPlate: event.carPlate,
+          residentId: residentId,
+        );
+
+        emit(
+          state.copyWith(
+            isGenerating: false,
+            lastCreatedVisitor: newVisitor,
+            activeTab: 1,
+          ),
+        );
+
+        add(FetchVisitors());
+      } catch (e) {
+        emit(state.copyWith(isGenerating: false));
+        if (kDebugMode) {
+          print("Error creating visitor: $e");
+        }
+      }
+    });
+
+    on<UpdateHasCar>(
+      (event, emit) => emit(state.copyWith(hasCar: event.value)),
+    );
+
+    on<UpdateCompanions>(
+      (event, emit) => emit(state.copyWith(companionsCount: event.count)),
+    );
+
+    on<UpdateDate>(
+      (event, emit) => emit(state.copyWith(selectedDate: event.date)),
+    );
+
+    on<UpdateRelation>(
+      (event, emit) => emit(state.copyWith(relation: event.relation)),
+    );
+
+    on<ResetForm>((event, emit) {
       emit(state.copyWith(
-        isGenerating: false,
-        generatedVisitorName: event.visitorName,
-        qrCodeData: finalQrData,
-        activeTab: 1,
+        hasCar: false,
+        companionsCount: 0,
+        selectedDate: DateTime.now(),
       ));
     });
   }

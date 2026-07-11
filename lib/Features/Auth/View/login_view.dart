@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../Core/CacheManager/cache_manager.dart';
 import '../../../Core/Colors/app_colors.dart';
 import '../../MainPage/View/main_home_page.dart';
 import '../BLoC/auth_event.dart';
@@ -15,8 +16,8 @@ class LoginView extends StatefulWidget {
 
 class _LoginViewState extends State<LoginView> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameController = TextEditingController(text: "7777777777");
-  final TextEditingController _passwordController = TextEditingController(text: "1234");
+  final TextEditingController _usernameController = TextEditingController(text: "admin");
+  final TextEditingController _passwordController = TextEditingController(text: "123");
 
   @override
   void dispose() {
@@ -118,8 +119,8 @@ class _LoginViewState extends State<LoginView> {
                         const SizedBox(height: 10),
                         TextFormField(
                           controller: _usernameController,
-                          keyboardType: TextInputType.phone,
-                          textAlign: TextAlign.left, // للأرقام
+                          keyboardType: TextInputType.name,
+                          textAlign: TextAlign.left,
                           decoration: _inputDecoration(
                             colors,
                             "7XX XXX XXXX",

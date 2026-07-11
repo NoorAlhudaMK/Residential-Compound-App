@@ -1,5 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:residential_compound_app/Data/Models/announcement_model.dart';
+import 'package:residential_compound_app/Data/Repositories/community_repository.dart';
+import 'package:http/http.dart' as https;
+import '../../../Core/AppConstants/app_constants.dart';
+import '../../../Core/CacheManager/cache_manager.dart';
 import '../BLoC/community_bloc.dart';
 import '../BLoC/community_event.dart';
 import '../BLoC/community_state.dart';
@@ -10,7 +16,7 @@ class CommunityView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => CommunityBloc()..add(LoadAnnouncements()),
+      create: (context) => CommunityBloc(repository: CommunityRepository())..add(LoadAnnouncements()),
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: Scaffold(
@@ -63,18 +69,7 @@ class CommunityView extends StatelessWidget {
       centerTitle: true,
       automaticallyImplyActions: false,
       automaticallyImplyLeading: false,
-      // leading: Padding(
-      //   padding: const EdgeInsets.all(8.0),
-      //   child: CircleAvatar(
-      //     backgroundColor: const Color(0xFFF1F5F9),
-      //     child: IconButton(
-      //       icon: const Icon(Icons.add, color: Color(0xFF102C57)),
-      //       onPressed: () {
-      //         // هنا نفتح صفحة إضافة إعلان جديد مستقبلاً
-      //       },
-      //     ),
-      //   ),
-      // ),
+
     );
   }
 
@@ -108,10 +103,13 @@ class CommunityView extends StatelessWidget {
   }
 
   Widget _buildAnnouncementCard(
-    BuildContext context, {
-    required int index,
-    required Map<String, dynamic> data,
-  }) {
+      BuildContext context, {
+        required int index,
+        required AnnouncementModel data, // الآن تستخدم الموديل مباشرة
+      }) {
+    if (kDebugMode) {
+      print("رابط الصورة: ${AppConstants.baseUrl}${data.imageUrl}");
+    }
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(20),
@@ -135,71 +133,88 @@ class CommunityView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "إدارة المجمع",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                    ),
-                    Text(
-                      data['time'],
-                      style: const TextStyle(color: Colors.grey, fontSize: 11),
-                    ),
+                    const Text("إدارة المجمع", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    const Text("منذ فترة قصيرة", style: TextStyle(color: Colors.grey, fontSize: 11)),
                   ],
                 ),
               ),
-              _buildTag(data['tag'], Color(data['tagColor'])),
+              _buildTag("إعلان", Colors.blue),
             ],
           ),
           const SizedBox(height: 15),
           Text(
-            data['title'],
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: Color(0xFF102C57),
-            ),
+            data.title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF102C57)),
           ),
           const SizedBox(height: 8),
           Text(
-            data['content'],
-            style: const TextStyle(
-              color: Color(0xFF64748B),
-              height: 1.5,
-              fontSize: 13,
-            ),
+            data.subtitle,
+            style: const TextStyle(color: Color(0xFF64748B), height: 1.5, fontSize: 13),
           ),
 
-          if (data['hasImage']) _buildImagePlaceholder(),
+          if (data.imageUrl.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 15),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: _buildImageWithToken('${AppConstants.baseUrl}${data.imageUrl}'),
+              ),
+            ),
 
           const SizedBox(height: 20),
           const Divider(color: Color(0xFFF1F5F9)),
 
           Row(
             children: [
-              _buildInteractionBtn(
-                context,
-                icon: data['isLiked']
-                    ? Icons.thumb_up_rounded
-                    : Icons.thumb_up_off_alt_outlined,
-                label: "إعجاب ${data['likes']}",
-                color: data['isLiked'] ? Colors.blue : const Color(0xFF64748B),
-                onTap: () =>
-                    context.read<CommunityBloc>().add(ToggleLike(index)),
-              ),
+              _buildInteractionBtn(context, icon: Icons.thumb_up_off_alt_outlined, label: "إعجاب", color: const Color(0xFF64748B), onTap: () {}),
               const SizedBox(width: 20),
-              _buildInteractionBtn(
-                context,
-                icon: Icons.chat_bubble_outline_rounded,
-                label: "تعليقات ${data['comments']}",
-                color: const Color(0xFF64748B),
-                onTap: () {},
-              ),
+              _buildInteractionBtn(context, icon: Icons.chat_bubble_outline_rounded, label: "تعليقات", color: const Color(0xFF64748B), onTap: () {}),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildImageWithToken(String imageUrl) {
+    return FutureBuilder<String?>(
+      future: CacheManager.getToken(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data == null) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final token = snapshot.data!;
+
+        return FutureBuilder<https.Response>(
+          future: https.get(
+            Uri.parse(imageUrl),
+            headers: {
+              'Accept': 'image/*',
+              'User-Agent': 'Mozilla/5.0',
+              'Authorization': 'Bearer $token',
+            },
+          ),
+          builder: (context, responseSnapshot) {
+            if (!responseSnapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final response = responseSnapshot.data!;
+            if (response.statusCode == 200) {
+              return Image.memory(
+                response.bodyBytes,
+                height: 150,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              );
+            } else {
+              debugPrint('خطأ تحميل الصورة: ${response.statusCode}');
+              return _buildImagePlaceholder();
+            }
+          },
+        );
+      },
     );
   }
 

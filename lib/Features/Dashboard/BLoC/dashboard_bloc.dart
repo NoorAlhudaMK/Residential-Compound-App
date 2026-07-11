@@ -1,20 +1,27 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:residential_compound_app/Data/Repositories/home_repository.dart';
 
+import '../../../Core/CacheManager/cache_manager.dart';
 import 'dashboard_event.dart';
 import 'dashboard_state.dart';
 
 class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
-  DashboardBloc() : super(DashboardLoading()) {
+  final HomeRepository repository;
+
+  DashboardBloc({required this.repository}) : super(DashboardLoading()) {
+
     on<FetchDashboardData>((event, emit) async {
-      await Future.delayed(const Duration(seconds: 1)); // محاكاة طلب API
-      emit(DashboardLoaded(
-        dueAmount: 1250,
-        dueDate: "15 أكتوبر 2023",
-        activities: [
-          {"title": "اجتماع السكان السنوي", "time": "08:00 م", "date": "22 أبريل"},
-          {"title": "صيانة المصاعد الدورية", "time": "10:00 ص", "date": "25 أبريل"},
-        ],
-      ));
+      emit(DashboardLoading());
+      try {
+        final user = await CacheManager.getUserModel();
+        final token = await CacheManager.getToken();
+
+        final homeData = await repository.getHomeData(token!);
+
+        emit(DashboardLoaded(user: user, homeData: homeData));
+      } catch (e) {
+        emit(DashboardFailure(message: "حدث خطأ أثناء جلب البيانات: $e"));
+      }
     });
   }
 }
