@@ -7,6 +7,7 @@ import '../../../Data/Repositories/maintenance_repository.dart';
 import '../BLoC/maintenance_bloc.dart';
 import '../BLoC/maintenance_event.dart';
 import '../BLoC/maintenance_state.dart';
+import 'add_new_maintenance_view.dart';
 
 class MaintenanceView extends StatelessWidget {
   const MaintenanceView({super.key});
@@ -26,6 +27,22 @@ class MaintenanceView extends StatelessWidget {
             automaticallyImplyLeading: false,
             title: Text("الصيانة والخدمات", style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold)),
             centerTitle: true,
+            actions: [
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const NewMaintenanceRequestView(),
+                    ),
+                  );
+                },
+                child: Icon(
+                    Icons.add,
+                  color: colors.primary,
+                ),
+              ),
+            ],
           ),
           body: BlocBuilder<MaintenanceBloc, MaintenanceState>(
             builder: (context, state) {
@@ -73,6 +90,7 @@ class MaintenanceView extends StatelessWidget {
                 children: [
                   Text(req.subject, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   Text("${req.categoryName} • #${req.id}", style: TextStyle(color: colors.textSecondary, fontSize: 12)),
+                  Text("${req.description}", style: TextStyle(color: colors.textSecondary, fontSize: 12)),
                 ],
               ),
             ],
@@ -128,7 +146,6 @@ class MaintenanceView extends StatelessWidget {
       }).toList(),
     );
   }
-
 
   Widget _buildPastRequestCard(BuildContext context, MaintenanceTicketModel req, AppColors colors) {
     bool isRated = req.averageRating > 0;

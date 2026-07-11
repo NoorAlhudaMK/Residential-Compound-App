@@ -74,8 +74,8 @@ class NewMaintenanceRequestView extends StatelessWidget {
                       ),
                       onPressed: () {
                         context.read<MaintenanceBloc>().add(SubmitTicket(
-                          subject: state.selectedService, // أو عنوان يتم إدخاله
-                          description: state.descriptionText, // النص الذي قمت بحفظه
+                          subject: state.selectedService,
+                          description: state.descriptionText,
                         ));
                         Navigator.pop(context);
                       },
