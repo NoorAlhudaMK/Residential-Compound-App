@@ -1,12 +1,11 @@
 import '../../../Data/Models/invoice_model.dart';
-import '../../../Data/Models/payment_model.dart';
 
 enum BillingStatus { initial, loading, success, failure }
 
 class BillingState {
-  late final List<InvoiceModel> bills; // الفواتير المستحقة
-  final List<PaymentModel> paidBills; // الفواتير المدفوعة
-  late final Set<String> selectedBillIds;
+  final List<InvoiceModel> bills; // الفواتير المستحقة
+  final List<InvoiceModel> paidBills; // الفواتير المدفوعة
+  final Set<String> selectedBillIds;
   final BillingStatus status;
   final double totalDue;
   final int selectedTab; // 0 للمستحقة، 1 للمدفوعة
@@ -30,7 +29,7 @@ class BillingState {
 
   BillingState copyWith({
     List<InvoiceModel>? bills,
-    List<PaymentModel>? paidBills,
+    List<InvoiceModel>? paidBills,
     Set<String>? selectedBillIds,
     BillingStatus? status,
     double? totalDue,

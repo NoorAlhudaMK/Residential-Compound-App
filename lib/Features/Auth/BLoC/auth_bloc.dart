@@ -14,9 +14,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       try {
         final loginResponse = await authRepository.login(event.username, event.password);
 
-        final user = await authRepository.fetchAndCacheUserProfile(loginResponse.token!);
+        final token = loginResponse.token!;
 
+        bool hasAccess = await authRepository.checkUserAccess(token);
+        if (!hasAccess) {
+          emit(AuthFailure("عفواً، ليس لديك صلاحية الدخول كـ resident"));
+          return;
+        }
+
+        final user = await authRepository.fetchAndCacheUserProfile(token);
         await CacheManager.saveUserData(user);
+
         emit(AuthSuccess(user.name));
       } catch (e) {
         emit(AuthFailure(e.toString()));
@@ -43,8 +51,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     on<TogglePasswordVisibility>((event, emit) {
       final currentState = state;
+      final bool newVisibility = !currentState.isPasswordVisible;
+
       if (currentState is AuthInitial) {
-        emit(AuthInitial(isPasswordVisible: !currentState.isPasswordVisible));
+        emit(AuthInitial(isPasswordVisible: newVisibility));
+      } else if (currentState is AuthFailure) {
+        emit(AuthFailure(currentState.error, isPasswordVisible: newVisibility));
+      } else if (currentState is AuthLoading) {
+        emit(AuthLoading(isPasswordVisible: newVisibility));
+      } else if (currentState is AuthSuccess) {
+        emit(AuthSuccess(currentState.userName,isPasswordVisible: newVisibility));
       }
     });
   }
