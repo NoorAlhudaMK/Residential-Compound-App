@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:residential_compound_app/Data/Models/invoice_model.dart';
-import 'package:residential_compound_app/Data/Repositories/payment_reopsitory.dart';
+import 'package:residential_compound_app/Data/Repositories/billing_repository.dart';
+import 'package:residential_compound_app/Features/Payments/View/payments_view.dart';
 import '../../../Core/FormattedDateTime/formatted_price.dart';
+import '../../../Core/Colors/app_colors.dart';
+import '../../../Core/UIConstants/aivio_border_radius.dart';
+import '../../../Core/UIConstants/aivio_font_sizes.dart';
+import '../../../Core/UIConstants/aivio_icon_sizes.dart';
+import '../../../Core/UIConstants/aivio_spacing.dart';
+import '../../../Data/Models/invoice_model.dart';
+import '../../../Data/Repositories/payment_reopsitory.dart';
+import '../../MainPage/View/main_home_page.dart';
 import '../BLoC/billing_bloc.dart';
 import '../BLoC/billing_event.dart';
 import '../BLoC/billing_state.dart';
@@ -12,48 +20,42 @@ class BillingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors();
+
     return BlocProvider(
       create: (context) =>
-          BillingBloc(repository: PaymentRepository())..add(LoadBills()),
+      BillingBloc(repository: BillingRepository())..add(LoadBills()),
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: Scaffold(
-          backgroundColor: const Color(0xFFF8F9FB),
-          appBar: _buildAppBar(context),
+          backgroundColor: colors.scaffoldBackground,
+          appBar: _buildAppBar(colors),
           body: BlocBuilder<BillingBloc, BillingState>(
             builder: (context, state) {
               if (state.status == BillingStatus.loading) {
                 return const Center(child: CircularProgressIndicator());
               }
-
               return Stack(
                 children: [
                   CustomScrollView(
-                    physics: const BouncingScrollPhysics(),
                     slivers: [
                       SliverPadding(
-                        padding: const EdgeInsets.all(20),
+                        padding: AppSpacing.allLg,
                         sliver: SliverList(
                           delegate: SliverChildListDelegate([
-                            _buildHeaderCard(state),
-                            const SizedBox(height: 25),
-                            _buildTabSwitcher(context, state),
-                            const SizedBox(height: 25),
-
+                            _buildHeaderCard(context, state, colors),
+                            const SizedBox(height: AppSpacing.lg),
+                            _buildTabSwitcher(context, state, colors),
+                            const SizedBox(height: AppSpacing.lg),
                             state.selectedTab == 0
-                                ? _buildUnpaidSection(context, state)
-                                : _buildPaidSection(state),
-
+                                ? _buildUnpaidSection(context, state, colors)
+                                : _buildPaidSection(state, colors),
                             const SizedBox(height: 150),
                           ]),
                         ),
                       ),
                     ],
                   ),
-
-                  // إظهار شريط الدفع فقط في تاب "المستحقة"
-                  if (state.selectedTab == 0)
-                    _buildBottomPaymentBar(context, state),
                 ],
               );
             },
@@ -63,493 +65,229 @@ class BillingView extends StatelessWidget {
     );
   }
 
-  // --- تابات المحتوى ---
+  AppBar _buildAppBar(AppColors colors) => AppBar(
+    backgroundColor: colors.scaffoldBackground,
+    elevation: 0,
+    scrolledUnderElevation: 0.0,
+    title: Text(
+      "الفــواتــيــر والــمــدفــوعــات",
+      style: TextStyle(
+        color: colors.textMain,
+        fontWeight: FontWeight.bold,
+        fontSize: AppFontSizes.headingSmall,
+      ),
+    ),
+    centerTitle: true,
+    automaticallyImplyLeading: false,
+    automaticallyImplyActions: false,
+    leading: IconButton(
+      icon: Icon(Icons.menu, size: AppIconSizes.md, color: colors.textMain),
+      onPressed: () {
+        MainHomePage.drawerController.toggle();
+      },
+    ),
+  );
 
-  Widget _buildUnpaidSection(BuildContext context, BillingState state) {
-    return Column(
+  Widget _buildHeaderCard(BuildContext context, BillingState state, AppColors colors) => Container(
+    padding: AppSpacing.allLg,
+    decoration: BoxDecoration(
+      gradient: colors.primaryGradient,
+      borderRadius: AppRadius.xlRadius,
+    ),
+    child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSelectionHeader(context, state),
-        const SizedBox(height: 15),
-        ...state.bills.map(
-          (bill) => _buildUnpaidBillCard(context, bill, state),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPaidSection(BillingState state) {
-    if (state.paidBills.isEmpty) {
-      return const Center(child: Text("لا توجد فواتير مدفوعة"));
-    }
-    return Column(
-      children: state.paidBills
-          .map(
-            (payment) => Container(
-              margin: const EdgeInsets.only(bottom: 15),
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.green),
-                  const SizedBox(width: 15),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          payment.name,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          payment.paymentDate,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Text(
-                    "${payment.amount} ${payment.currency}",
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          )
-          .toList(),
-    );
-  }
-
-  // --- تصميم البطاقات (Cards) ---
-
-  Widget _buildUnpaidBillCard(
-    BuildContext context,
-    InvoiceModel bill,
-    BillingState state,
-  ) {
-    bool isSelected = state.selectedBillIds.contains(bill.id.toString());
-    return GestureDetector(
-      onTap: () => context.read<BillingBloc>().add(
-        ToggleBillSelection(bill.id.toString()),
-      ),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 15),
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xFFFFB300)
-                : const Color(0xFFF1F5F9),
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Row(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildCustomCheckbox(isSelected),
-            const SizedBox(width: 15),
-            _buildServiceIcon(bill),
-            const SizedBox(width: 15),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    bill.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
-                  ),
-                  Text(
-                    bill.dueDate,
-                    style: const TextStyle(color: Colors.grey, fontSize: 12),
-                  ),
-                ],
+            const Text(
+              "إجمالي الفواتير المستحقة",
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: AppFontSizes.bodySmall,
               ),
             ),
-            _buildPriceAndStatus(bill),
+            TextButton.icon(
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const PaymentsView()));
+              },
+              icon: const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 14),
+              label: const Text(
+                "سجل الدفعات",
+                style: TextStyle(color: Colors.white, fontSize: AppFontSizes.bodySmall),
+              ),
+            ),
           ],
         ),
-      ),
-    );
-  }
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          "${formatNumber(double.parse(state.totalUnpaidAmount.toString()))} د.ع",
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: AppFontSizes.displayLarge,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    ),
+  );
 
-  Widget _buildPaidBillCard(Map<String, dynamic> bill) {
+  Widget _buildTabSwitcher(
+      BuildContext context,
+      BillingState state,
+      AppColors colors,
+      ) => Container(
+    padding: const EdgeInsets.all(AppSpacing.xs),
+    decoration: BoxDecoration(
+      color: colors.secondaryBtnBg,
+      borderRadius: AppRadius.mdRadius,
+    ),
+    child: Row(
+      children: [
+        _buildTab(context, "مستحقة", state.selectedTab == 0, 0, colors),
+        _buildTab(context, "مدفوعة", state.selectedTab == 1, 1, colors),
+      ],
+    ),
+  );
+
+  Widget _buildTab(
+      BuildContext context,
+      String label,
+      bool isActive,
+      int index,
+      AppColors colors,
+      ) => Expanded(
+    child: GestureDetector(
+      onTap: () => context.read<BillingBloc>().add(ChangeTab(index)),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: isActive ? Colors.white : Colors.transparent,
+          borderRadius: AppRadius.mdRadius,
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: AppFontSizes.bodyMedium,
+            color: isActive ? colors.primary : colors.textSecondary,
+          ),
+        ),
+      ),
+    ),
+  );
+
+  Widget _buildUnpaidBillCard(
+      BuildContext context,
+      InvoiceModel bill,
+      BillingState state,
+      AppColors colors,
+      ) {
+    bool isSelected = state.selectedBillIds.contains(bill.id.toString());
     return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: AppSpacing.allMd,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
+        borderRadius: AppRadius.lgRadius,
+        border: Border.all(
+          color: isSelected ? colors.primary : Colors.transparent,
+        ),
       ),
       child: Row(
         children: [
-          const CircleAvatar(
-            radius: 12,
-            backgroundColor: Color(0xFFE8F5E9),
-            child: Icon(Icons.check, color: Color(0xFF4CAF50), size: 14),
+          Checkbox(
+            value: isSelected,
+            activeColor: colors.primary,
+            onChanged: (_) => context.read<BillingBloc>().add(
+              ToggleBillSelection(bill.id.toString()),
+            ),
           ),
-          const SizedBox(width: 15),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  bill['title'],
-                  style: const TextStyle(
+                  bill.name,
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 15,
+                    fontSize: AppFontSizes.bodyLarge,
+                    color: colors.textMain,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
-                  bill['paidDate'],
-                  style: const TextStyle(
-                    color: Color(0xFF4CAF50),
-                    fontSize: 11,
+                  bill.dueDate,
+                  style: TextStyle(
+                    color: colors.textSecondary,
+                    fontSize: AppFontSizes.bodySmall,
                   ),
                 ),
               ],
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                "${formatNumber(double.parse(bill['amount'].toString()))} د.ع",
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              Text(
-                bill['date'],
-                style: const TextStyle(color: Colors.grey, fontSize: 11),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --- مكونات الواجهة الصغيرة ---
-
-  AppBar _buildAppBar(BuildContext context) {
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      title: const Text(
-        "الفواتير والمدفوعات",
-        style: TextStyle(
-          color: Color(0xFF102C57),
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
-        ),
-      ),
-      centerTitle: true,
-      automaticallyImplyActions: false,
-      automaticallyImplyLeading: false,
-    );
-  }
-
-  Widget _buildHeaderCard(BillingState state) {
-    return Container(
-      padding: const EdgeInsets.all(25),
-      decoration: BoxDecoration(
-        color: const Color(0xFF102C57),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "إجمالي الفواتير المستحقة",
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
-                  Text(
-                    "${formatNumber(double.parse(state.totalUnpaidAmount.toString()))} د.ع",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              _buildLateBadge(),
-            ],
-          ),
-          const SizedBox(height: 20),
-          const Divider(color: Colors.white12),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "فواتير غير مدفوعة  ${state.bills.length}",
-                style: TextStyle(color: Colors.white, fontSize: 14),
-              ),
-              // TextButton(
-              //   onPressed: () {},
-              //   child: const Text(
-              //     "عرض السجل",
-              //     style: TextStyle(color: Color(0xFFFFB300)),
-              //   ),
-              // ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabSwitcher(BuildContext context, BillingState state) {
-    return Container(
-      padding: const EdgeInsets.all(5),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Row(
-        children: [
-          _buildTab(context, "مستحقة (${state.bills.length})", state.selectedTab == 0, 0),
-          _buildTab(context, "مدفوعة", state.selectedTab == 1, 1),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTab(
-    BuildContext context,
-    String label,
-    bool isActive,
-    int index,
-  ) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => context.read<BillingBloc>().add(ChangeTab(index)),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isActive ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: isActive
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 5,
-                    ),
-                  ]
-                : null,
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
+          Text(
+            "${formatNumber(double.parse(bill.amountTotal.toString()))} د.ع",
             style: TextStyle(
-              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-              color: isActive ? const Color(0xFF102C57) : Colors.grey,
+              fontWeight: FontWeight.bold,
+              fontSize: AppFontSizes.bodyLarge,
+              color: colors.textMain,
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildBottomPaymentBar(BuildContext context, BillingState state) {
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: Container(
-        padding: const EdgeInsets.all(25),
+  Widget _buildPaidSection(BillingState state, AppColors colors) => Column(
+    children: state.paidBills
+        .map(
+          (p) => Container(
+        padding: AppSpacing.allMd,
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
         decoration: BoxDecoration(
           color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+          borderRadius: AppRadius.lgRadius,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "المختار (${state.selectedBillIds.length})",
-                      style: const TextStyle(color: Colors.grey, fontSize: 12),
-                    ),
-                    Text(
-                      "${formatNumber(state.selectedTotal)}  د.ع",
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF102C57),
-                      ),
-                    ),
-                  ],
-                ),
-                _buildApplePay(),
-              ],
-            ),
-            const SizedBox(height: 15),
-            ElevatedButton(
-              onPressed: state.selectedBillIds.isEmpty ? null : () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF102C57),
-                minimumSize: const Size(double.infinity, 55),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
+            Text(
+              p.name,
+              style: TextStyle(
+                fontSize: AppFontSizes.bodyLarge,
+                color: colors.textMain,
+                fontWeight: FontWeight.w500,
               ),
-              child: const Text(
-                "ادفع الآن",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+            ),
+            Text(
+              "${formatNumber(p.amountTotal)} د.ع",
+              style: TextStyle(
+                fontSize: AppFontSizes.bodyLarge,
+                color: colors.textSecondary,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],
         ),
       ),
-    );
-  }
+    )
+        .toList(),
+  );
 
-  // --- أدوات مساعدة إضافية ---
-  Widget _buildCustomCheckbox(bool isSelected) {
-    return Container(
-      width: 22,
-      height: 22,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isSelected ? const Color(0xFFFFB300) : Colors.transparent,
-        border: Border.all(
-          color: isSelected ? const Color(0xFFFFB300) : Colors.grey.shade300,
-        ),
-      ),
-      child: isSelected
-          ? const Icon(Icons.check, color: Colors.white, size: 14)
-          : null,
-    );
-  }
-
-  Widget _buildServiceIcon(InvoiceModel bill) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.1),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(Icons.eighteen_mp_rounded, color: Colors.blue, size: 20),
-    );
-  }
-
-  Widget _buildPriceAndStatus(InvoiceModel bill) {
-    bool isLate = bill.paymentState.contains('not_paid');
+  Widget _buildUnpaidSection(
+      BuildContext context,
+      BillingState state,
+      AppColors colors,
+      ) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "${formatNumber(double.parse(bill.amountTotal.toString()))} د.ع",
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-        ),
-        Text(
-          bill.paymentState,
-          style: TextStyle(
-            color: isLate ? Colors.red : Colors.orange,
-            fontSize: 10,
-          ),
+        ...state.bills.map(
+              (bill) => _buildUnpaidBillCard(context, bill, state, colors),
         ),
       ],
-    );
-  }
-
-  Widget _buildSelectionHeader(BuildContext context, BillingState state) {
-    // التحقق هل جميع الفواتير مختارة حالياً؟
-    bool isAllSelected =
-        state.selectedBillIds.length == state.bills.length &&
-        state.bills.isNotEmpty;
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Text(
-          "حدد الفواتير لدفعها معاً",
-          style: TextStyle(color: Colors.grey, fontSize: 12),
-        ),
-        TextButton(
-          onPressed: () {
-            context.read<BillingBloc>().add(SelectAllBills(!isAllSelected));
-          },
-          child: Text(
-            isAllSelected ? "إلغاء الكل" : "تحديد الكل",
-            style: const TextStyle(
-              color: Color(0xFFFFB300),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLateBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white12,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.warning_amber_rounded, color: Color(0xFFFFB300), size: 14),
-          SizedBox(width: 5),
-          Text("متأخرة 1", style: TextStyle(color: Colors.white, fontSize: 11)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildApplePay() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF9E7),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.apple, size: 18),
-          SizedBox(width: 5),
-          Text(
-            "Apple Pay متاح",
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
     );
   }
 }

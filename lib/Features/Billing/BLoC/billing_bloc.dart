@@ -1,16 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:residential_compound_app/Data/Repositories/payment_reopsitory.dart';
+import 'package:residential_compound_app/Data/Repositories/billing_repository.dart';
 import '../../../Core/CacheManager/cache_manager.dart';
-import '../../../Data/Models/invoice_model.dart';
-import '../../../Data/Models/payment_model.dart';
 import 'billing_event.dart';
 import 'billing_state.dart';
 
 class BillingBloc extends Bloc<BillingEvent, BillingState> {
-  final PaymentRepository repository;
+  final BillingRepository repository;
 
   BillingBloc({required this.repository}) : super(BillingState()) {
-
     on<LoadBills>((event, emit) async {
       emit(state.copyWith(status: BillingStatus.loading));
       try {
@@ -18,13 +15,13 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
 
         final results = await Future.wait([
           repository.fetchUnpaidInvoices(token!),
-          repository.fetchPaidBills(token),
+          repository.fetchPaidInvoices(token),
         ]);
 
         emit(state.copyWith(
           status: BillingStatus.success,
-          bills: results[0] as List<InvoiceModel>, // المستحقة
-          paidBills: results[1] as List<PaymentModel>, // المدفوعة
+          bills: results[0], // المستحقة
+          paidBills: results[1], // المدفوعة
         ));
       } catch (e) {
         emit(state.copyWith(status: BillingStatus.failure));
@@ -47,7 +44,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
 
     on<SelectAllBills>((event, emit) {
       if (event.isSelected) {
-        final allIds = state.bills.map((b) => b.id as String).toSet();
+        final allIds = state.bills.map((b) => b.id.toString()).toSet();
         emit(state.copyWith(selectedBillIds: allIds));
       } else {
         emit(state.copyWith(selectedBillIds: {}));

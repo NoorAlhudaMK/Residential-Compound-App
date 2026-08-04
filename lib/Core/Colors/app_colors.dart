@@ -5,30 +5,36 @@ class AppColors {
 
   Color get scaffoldBackground => isDark
       ? const Color(0xFF0D1117)
-      : const Color(0xFFFFFFFF);
+      : const Color(0xFFF7F7FD);
 
-  Color get primary => const Color(0xFF102C57);
+  Color get primary => const Color(0xFF7C5CFC);
 
-  Color get goldAccent => const Color(0xFFDAC077);
+  LinearGradient get primaryGradient => const LinearGradient(
+    colors: [Color(0xFF58D1D1), Color(0xFF7C5CFC)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 
   Color get textMain => isDark
       ? Colors.white
-      : const Color(0xFF102C57);
+      : const Color(0xFF1E1E2D);
 
-  Color get textSecondary => const Color(0xFF94A3B8);
+  Color get textSecondary => const Color(0xFF71717A);
 
-  Color get inputFill => const Color(0xFFF8FAFC);
+  Color get inputFill => isDark ? const Color(0xFF1E1E2D) : Colors.white;
 
-  Color get inputBorder => const Color(0xFFE2E8F0);
+  Color get inputBorder => const Color(0xFFE4E4E7);
 
-  Color get secondaryBtnBg => const Color(0xFFF8FAFC);
+  Color get secondaryBtnBg => const Color(0xFFF1F1F9);
 
-  static const Color statusApprovedBg = Color(0xFFDCFCE7); // أخضر فاتح
-  static const Color statusApprovedText = Color(0xFF166534); // أخضر داكن
+  Color get statusApprovedBg => const  Color(0xFFDCFCE7);
+  Color get statusApprovedText => const  Color(0xFF166534);
 
-  static const Color statusArrivedBg = Color(0xFFDBEAFE); // أزرق فاتح
-  static const Color statusArrivedText = Color(0xFF1E40AF); // أزرق داكن
+  Color get statusArrivedBg => const  Color(0xFFDBEAFE);
+  Color get statusArrivedText => const  Color(0xFF1E40AF);
 
-  static const Color statusDefaultBg = Color(0xFFF1F5F9); // رمادي فاتح
-  static const Color statusDefaultText = Color(0xFF475569); // رمادي
+  Color get statusDefaultBg => const  Color(0xFFF1F5F9);
+  Color get statusDefaultText => const  Color(0xFF475569);
+
+  Color get danger => const  Color(0xFFE11D48);
 }

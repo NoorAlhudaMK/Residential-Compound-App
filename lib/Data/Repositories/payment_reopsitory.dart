@@ -2,42 +2,33 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../../Core/AppConstants/app_constants.dart';
+import '../../Core/CacheManager/cache_manager.dart';
 import '../Models/payment_model.dart';
-import '../Models/invoice_model.dart'; // تأكد من استيراد مودل الفواتير
 
-class PaymentRepository {
+class PaymentsRepository {
+  Future<PaymentsResponseModel> getPayments({
+    int page = 1,
+    int perPage = 20,
+    String status = 'all',
+  }) async {
+    final token = await CacheManager.getToken();
+    final url = Uri.parse(
+      '${AppConstants.baseUrl}/api/v1/payments?status=$status&page=$page&per_page=$perPage',
+    );
 
-  Future<List<PaymentModel>> fetchPaidBills(String token) async {
     final response = await http.get(
-      Uri.parse('${AppConstants.baseUrl}/api/user/payments'),
-      headers: {"Authorization": "Bearer $token"},
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
     );
 
     if (response.statusCode == 200) {
-      final Map<String, dynamic> body = jsonDecode(response.body);
-      final List<dynamic> payments = body['data']['payments'];
-      return payments.map((json) => PaymentModel.fromJson(json)).toList();
+      final Map<String, dynamic> jsonBody = jsonDecode(response.body);
+      return PaymentsResponseModel.fromJson(jsonBody);
     } else {
-      throw Exception("فشل جلب المدفوعات");
-    }
-  }
-
-  Future<List<InvoiceModel>> fetchUnpaidInvoices(String token) async {
-    final response = await http.get(
-      Uri.parse('${AppConstants.baseUrl}/api/user/invoices'),
-      headers: {"Authorization": "Bearer $token"},
-    );
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> body = jsonDecode(response.body);
-      final List<dynamic> invoices = body['data']['invoices'];
-
-      return invoices
-          .map((json) => InvoiceModel.fromJson(json))
-          .where((invoice) => invoice.paymentState == 'not_paid')
-          .toList();
-    } else {
-      throw Exception("فشل جلب الفواتير المستحقة");
+      throw Exception('فشل في جلب المدفوعات: ${response.statusCode}');
     }
   }
 }

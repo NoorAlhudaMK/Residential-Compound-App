@@ -1,5 +1,6 @@
 class MaintenanceTicketModel {
   final int id;
+  final String name; // مثل MNT-00001
   final String subject;
   final String description;
   final String categoryName;
@@ -11,6 +12,7 @@ class MaintenanceTicketModel {
 
   MaintenanceTicketModel({
     required this.id,
+    required this.name,
     required this.subject,
     required this.description,
     required this.categoryName,
@@ -24,6 +26,7 @@ class MaintenanceTicketModel {
   factory MaintenanceTicketModel.fromJson(Map<String, dynamic> json) {
     return MaintenanceTicketModel(
       id: json['id'] ?? 0,
+      name: json['name'] ?? "",
       subject: json['subject'] ?? "",
       description: json['description'] ?? "",
       categoryName: json['category_name'] ?? "",

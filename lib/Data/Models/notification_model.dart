@@ -7,7 +7,7 @@ class NotificationModel {
   final String createDate;
   final String sentDate;
   final String? readDate;
-  final String relatedModel;
+  final dynamic relatedModel; // تم تعديلها إلى dynamic لتتقبل bool أو String أو null
   final int relatedResId;
 
   NotificationModel({
@@ -19,7 +19,7 @@ class NotificationModel {
     required this.createDate,
     required this.sentDate,
     this.readDate,
-    required this.relatedModel,
+    this.relatedModel,
     required this.relatedResId,
   });
 
@@ -33,7 +33,7 @@ class NotificationModel {
       createDate: json['create_date'] ?? '',
       sentDate: json['sent_date'] ?? '',
       readDate: json['read_date'],
-      relatedModel: json['related_model'] ?? '',
+      relatedModel: json['related_model'], // استقباله كما يأتيه الخادم بدون قيود النوع
       relatedResId: json['related_res_id'] ?? 0,
     );
   }

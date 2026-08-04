@@ -1,19 +1,22 @@
-abstract class AuthState {}
-
-class AuthInitial extends AuthState {
+abstract class AuthState {
   final bool isPasswordVisible;
-
-  AuthInitial({this.isPasswordVisible = true});
+  AuthState({this.isPasswordVisible = false});
 }
 
-class AuthLoading extends AuthState {}
+class AuthInitial extends AuthState {
+  AuthInitial({super.isPasswordVisible});
+}
+
+class AuthLoading extends AuthState {
+  AuthLoading({super.isPasswordVisible});
+}
 
 class AuthSuccess extends AuthState {
-  final String guardName;
-  AuthSuccess(this.guardName);
+  final String userName;
+  AuthSuccess(this.userName, {super.isPasswordVisible});
 }
 
 class AuthFailure extends AuthState {
-  final String errorMessage;
-  AuthFailure(this.errorMessage);
+  final String error;
+  AuthFailure(this.error, {super.isPasswordVisible});
 }

@@ -151,7 +151,6 @@ class BookingView extends StatelessWidget {
                 onDaySelected: (selectedDay, focusedDay) {
                   context.read<BookingBloc>().add(OnDaySelected(selectedDay, focusedDay));
                 },
-                // تخصيص التصميم ليطابق الصورة
                 headerStyle: const HeaderStyle(
                   formatButtonVisible: false,
                   titleCentered: true,
@@ -159,11 +158,11 @@ class BookingView extends StatelessWidget {
                 ),
                 calendarStyle: CalendarStyle(
                   selectedDecoration: BoxDecoration(
-                    color: colors.primary, // اللون الكحلي المعتمد
+                    color: colors.primary,
                     shape: BoxShape.circle,
                   ),
                   todayDecoration: BoxDecoration(
-                    color: colors.goldAccent.withOpacity(0.5),
+                    color: colors.primary.withOpacity(0.5),
                     shape: BoxShape.circle,
                   ),
                   defaultTextStyle: const TextStyle(fontSize: 14),
