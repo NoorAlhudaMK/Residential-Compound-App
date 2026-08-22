@@ -12,6 +12,7 @@ class PaymentsLoaded extends PaymentsState {
   final SummaryModel summary;
   final bool hasMore;
   final bool isLoadingMore;
+  final String selectedStatus;
 
   PaymentsLoaded({
     required this.payments,
@@ -19,6 +20,7 @@ class PaymentsLoaded extends PaymentsState {
     required this.summary,
     required this.hasMore,
     required this.isLoadingMore,
+    required this.selectedStatus,
   });
 
   PaymentsLoaded copyWith({
@@ -27,6 +29,7 @@ class PaymentsLoaded extends PaymentsState {
     SummaryModel? summary,
     bool? hasMore,
     bool? isLoadingMore,
+    String? selectedStatus,
   }) {
     return PaymentsLoaded(
       payments: payments ?? this.payments,
@@ -34,6 +37,7 @@ class PaymentsLoaded extends PaymentsState {
       summary: summary ?? this.summary,
       hasMore: hasMore ?? this.hasMore,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      selectedStatus: selectedStatus ?? this.selectedStatus,
     );
   }
 }
