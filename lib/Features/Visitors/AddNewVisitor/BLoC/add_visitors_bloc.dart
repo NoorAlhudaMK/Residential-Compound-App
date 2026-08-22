@@ -6,7 +6,6 @@ import '../../../../Data/Repositories/visitor_repository.dart';
 import 'add_visitors_event.dart';
 import 'add_visitors_state.dart';
 
-
 class AddVisitorBloc extends Bloc<AddVisitorEvent, AddVisitorState> {
   final VisitorRepository repository;
 
@@ -32,6 +31,10 @@ class AddVisitorBloc extends Bloc<AddVisitorEvent, AddVisitorState> {
         ),
       );
 
+      print(
+        "بيانات الزائر : ${event.name}, ${event.carPlate}, ${event.hasCar}, ${event.phone}, ${event.unitId}, ${event.validFrom}, ${event.validTo}",
+      );
+
       try {
         final user = await CacheManager.getUserModel();
 
@@ -39,11 +42,26 @@ class AddVisitorBloc extends Bloc<AddVisitorEvent, AddVisitorState> {
             ? user.residentProfiles.first.id
             : null;
 
+
         if (residentId == null) {
           emit(
             state.copyWith(
               isGenerating: false,
               errorMessage: "لم يتم العثور على ملف الساكن (residentId)",
+            ),
+          );
+          return;
+        }
+
+        final int unitId = event.unitId != null && event.unitId != 0
+            ? event.unitId
+            : (user.units != null && user.units!.isNotEmpty ? user.units!.first.id : 0);
+
+        if (unitId == 0) {
+          emit(
+            state.copyWith(
+              isGenerating: false,
+              errorMessage: "لم يتم العثور على وحدة مرتبطة بالساكن",
             ),
           );
           return;
@@ -60,11 +78,17 @@ class AddVisitorBloc extends Bloc<AddVisitorEvent, AddVisitorState> {
           return;
         }
 
+        print("residentProfiles: ${user.residentProfiles.length}");
+        print("units: ${user.units?.length}");
+        print("units data: ${user.units}");
+        print("units data: ${user}");
+
         final newVisitor = await repository.addVisitor(
           token: token,
           name: event.name,
           phone: event.phone,
-          unitId: user.units![0].id,
+          unitId: unitId,
+          nationalId: event.nationalId,
           validFrom: event.validFrom,
           validTo: event.validTo,
           hasCar: event.hasCar,
@@ -72,6 +96,9 @@ class AddVisitorBloc extends Bloc<AddVisitorEvent, AddVisitorState> {
           residentId: residentId,
         );
 
+        print(
+          "بيانات الزائر : ${event.name}, ${event.carPlate}, ${event.hasCar}, ${event.phone}, ${event.unitId}, ${event.validFrom}, ${event.validTo}",
+        );
         emit(
           state.copyWith(
             isGenerating: false,
@@ -89,7 +116,7 @@ class AddVisitorBloc extends Bloc<AddVisitorEvent, AddVisitorState> {
     });
 
     on<UpdateHasCar>(
-          (event, emit) => emit(state.copyWith(hasCar: event.value)),
+      (event, emit) => emit(state.copyWith(hasCar: event.value)),
     );
 
     on<UpdateIsTimeSelected>((event, emit) {

@@ -197,13 +197,13 @@ class BillingView extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Checkbox(
-            value: isSelected,
-            activeColor: colors.primary,
-            onChanged: (_) => context.read<BillingBloc>().add(
-              ToggleBillSelection(bill.id.toString()),
-            ),
-          ),
+          // Checkbox(
+          //   value: isSelected,
+          //   activeColor: colors.primary,
+          //   onChanged: (_) => context.read<BillingBloc>().add(
+          //     ToggleBillSelection(bill.id.toString()),
+          //   ),
+          // ),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

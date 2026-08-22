@@ -94,6 +94,7 @@ class VisitorRepository {
     required String name,
     required String phone,
     required int unitId,
+    required String nationalId,
     required String validFrom,
     required String validTo,
     required bool hasCar,
@@ -115,6 +116,7 @@ class VisitorRepository {
       "has_car": hasCar,
       "car_plate": carPlate,
       "resident_id": residentId,
+      "visitor_id_number": nationalId,
     });
 
     final response = await _safeRequest(

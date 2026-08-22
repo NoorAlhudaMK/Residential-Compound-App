@@ -344,7 +344,7 @@ class _DashboardViewState extends State<DashboardView> {
                     borderRadius: AppRadius.lgRadius,
                     child: announcement.imageUrl.isNotEmpty
                         ? _buildImageWithToken(
-                            '${AppConstants.baseUrl}${announcement.imageUrl}',
+                            announcement.imageUrl,
                           )
                         : Container(
                             color: Colors.grey[200],

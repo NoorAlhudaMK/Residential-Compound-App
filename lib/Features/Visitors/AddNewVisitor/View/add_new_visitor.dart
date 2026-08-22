@@ -245,8 +245,9 @@ class AddNewVisitorView extends StatelessWidget {
                                 context.read<AddVisitorBloc>().add(
                                   CreateVisitor(
                                     name: nameController.text,
-                                    phone: fullPhoneNumber, // نرسل الرقم الكامل المخزن
-                                    unitId: 1,
+                                    phone: fullPhoneNumber,
+                                    unitId: 1, ///TODO: مسحي بعدين لأن دنحسبه بالبلوك
+                                    nationalId: nationalIdController.text.trim(),
                                     validFrom: dateFormat.format(startDateTime),
                                     validTo: dateFormat.format(endDateTime),
                                     hasCar: state.hasCar,

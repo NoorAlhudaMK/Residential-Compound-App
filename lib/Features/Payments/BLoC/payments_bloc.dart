@@ -42,6 +42,7 @@ class PaymentsBloc extends Bloc<PaymentsEvent, PaymentsState> {
         summary: response.data.summary,
         hasMore: _hasNextPage,
         isLoadingMore: false,
+        selectedStatus: _currentStatus,
       ));
     } catch (e) {
       emit(PaymentsError(e.toString()));
@@ -74,6 +75,7 @@ class PaymentsBloc extends Bloc<PaymentsEvent, PaymentsState> {
           summary: response.data.summary,
           hasMore: _hasNextPage,
           isLoadingMore: false,
+          selectedStatus: 'all'
         ));
       } catch (e) {
         _currentPage--;

@@ -7,6 +7,7 @@ class PreviousStepEvent extends AddVisitorEvent {}
 class CreateVisitor extends AddVisitorEvent {
   final String name;
   final String phone;
+  final String nationalId;
   final int unitId;
   final String validTo;
   final String validFrom;
@@ -16,6 +17,7 @@ class CreateVisitor extends AddVisitorEvent {
   CreateVisitor({
     required this.name,
     required this.phone,
+    required this.nationalId,
     required this.unitId,
     required this.validFrom,
     required this.validTo,
