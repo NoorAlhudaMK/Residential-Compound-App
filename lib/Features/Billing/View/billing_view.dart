@@ -1,3 +1,4 @@
+import 'package:anydrawer/anydrawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:residential_compound_app/Data/Repositories/billing_repository.dart';
@@ -9,7 +10,7 @@ import '../../../Core/UIConstants/aivio_font_sizes.dart';
 import '../../../Core/UIConstants/aivio_icon_sizes.dart';
 import '../../../Core/UIConstants/aivio_spacing.dart';
 import '../../../Data/Models/invoice_model.dart';
-import '../../../Data/Repositories/payment_reopsitory.dart';
+import '../../Drawer/View/drawer_view.dart';
 import '../../MainPage/View/main_home_page.dart';
 import '../BLoC/billing_bloc.dart';
 import '../BLoC/billing_event.dart';
@@ -29,7 +30,7 @@ class BillingView extends StatelessWidget {
         textDirection: TextDirection.rtl,
         child: Scaffold(
           backgroundColor: colors.scaffoldBackground,
-          appBar: _buildAppBar(colors),
+          appBar: _buildAppBar(colors, context),
           body: BlocBuilder<BillingBloc, BillingState>(
             builder: (context, state) {
               if (state.status == BillingStatus.loading) {
@@ -65,7 +66,7 @@ class BillingView extends StatelessWidget {
     );
   }
 
-  AppBar _buildAppBar(AppColors colors) => AppBar(
+  AppBar _buildAppBar(AppColors colors, BuildContext context) => AppBar(
     backgroundColor: colors.scaffoldBackground,
     elevation: 0,
     scrolledUnderElevation: 0.0,
@@ -83,7 +84,12 @@ class BillingView extends StatelessWidget {
     leading: IconButton(
       icon: Icon(Icons.menu, size: AppIconSizes.md, color: colors.textMain),
       onPressed: () {
-        MainHomePage.drawerController.toggle();
+        showDrawer(
+          context,
+          builder: (context) {
+            return AppDrawer();
+          },
+        );
       },
     ),
   );

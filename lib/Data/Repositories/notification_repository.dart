@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../../Core/AppConstants/app_constants.dart';
+import '../../Core/CacheManager/cache_manager.dart';
 import '../Models/notification_model.dart';
 
 class NotificationRepository {
@@ -57,6 +58,59 @@ class NotificationRepository {
         print('Error details: $e');
       }
       throw Exception("فشل الاتصال بالسيرفر، تأكد من اتصالك بالإنترنت.");
+    }
+  }
+
+  Future<bool> markNotificationsAsRead(List<int> notificationIds) async {
+    String? token = await CacheManager.getToken();
+    final uri = Uri.parse('${AppConstants.baseUrl}/api/v1/notifications/read');
+
+    final Map<String, dynamic> body = {
+      "notification_ids": notificationIds,
+    };
+
+    final response = await http.post(
+      uri,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+      return responseData['success'] ?? false;
+    } else {
+      throw Exception("فشل في تحديث حالة الإشعارات: ${response.body}");
+    }
+  }
+
+  Future<bool> markNotificationAsRead(int notificationId) async {
+    String? token = await CacheManager.getToken();
+    final uri = Uri.parse('${AppConstants.baseUrl}api/v1/notifications/$notificationId/read');
+
+    if (kDebugMode) {
+      print('==================== [REQUEST: MARK_SINGLE_AS_READ] ====================');
+      print('URL: $uri');
+      print('========================================================================');
+    }
+
+    final response = await http.post(
+      uri,
+      headers: {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+      return responseData['success'] ?? true;
+    } else {
+      throw Exception("فشل في تحديث حالة الإشعار: ${response.body}");
     }
   }
 }

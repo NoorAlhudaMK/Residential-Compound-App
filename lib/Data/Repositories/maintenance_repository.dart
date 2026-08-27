@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../Core/AppConstants/app_constants.dart';
@@ -9,7 +10,6 @@ import '../Models/priority_model.dart';
 import '../Models/status_model.dart';
 
 class MaintenanceRepository {
-  // دالة مساعدة لطباعة الطلبات واستجابات السيرفر بأمان
   Future<http.Response> _safeRequest(
       String methodName,
       String url,
@@ -94,6 +94,7 @@ class MaintenanceRepository {
     required int unitId,
     required int categoryId,
     required String priority,
+    required List<File> images,
   }) async {
     final url = '${AppConstants.baseUrl}/api/user/new_ticket';
     final headers = {
@@ -101,16 +102,40 @@ class MaintenanceRepository {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
     };
+
+    List<Map<String, dynamic>> imagesList = [];
+    for (var imageFile in images) {
+      final bytes = await imageFile.readAsBytes();
+      final base64Image = base64Encode(bytes);
+
+      final fileName = imageFile.path.split('/').last;
+      String mimeType = "image/jpeg";
+      if (fileName.toLowerCase().endsWith('.png')) {
+        mimeType = "image/png";
+      } else if (fileName.toLowerCase().endsWith('.jpg') || fileName.toLowerCase().endsWith('.jpeg')) {
+        mimeType = "image/jpeg";
+      }
+
+      imagesList.add({
+        "image": base64Image,
+        "filename": fileName,
+        "mimetype": mimeType,
+        "image_type": "before",
+        "note": "صورة توضيحية للمشكلة"
+      });
+    }
+
     final requestBody = jsonEncode({
-      "subject": subject,
+      "title": subject,
       "description": description,
-      "unit_id": unitId,
       "category_id": categoryId,
+      "unit_id": unitId,
       "priority": priority,
+      "images": imagesList,
     });
 
     final response = await _safeRequest(
-      "CREATE_TICKET",
+      "CREATE_TICKET_JSON",
       url,
       headers,
           () => http.post(Uri.parse(url), headers: headers, body: requestBody),
@@ -118,7 +143,7 @@ class MaintenanceRepository {
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception("فشل إنشاء الطلب (رمز الخطأ: ${response.statusCode})");
+      throw Exception("فشل إنشاء الطلب: ${response.body}");
     }
   }
 

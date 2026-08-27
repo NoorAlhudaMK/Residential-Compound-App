@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart' as intl;
 import '../../../Core/Colors/app_colors.dart';
 import '../../../Core/UIConstants/aivio_border_radius.dart';
 import '../../../Core/UIConstants/aivio_font_sizes.dart';
@@ -39,11 +40,38 @@ class NotificationView extends StatelessWidget {
               automaticallyImplyLeading: false,
               leading: IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: Icon(Icons.arrow_back_ios_new, size: AppIconSizes.md,
-                  color: colors.textMain, ),
+                icon: Icon(
+                  Icons.arrow_back_ios_new,
+                  size: AppIconSizes.md,
+                  color: colors.textMain,
+                ),
               ),
+              actions: [
+                BlocBuilder<NotificationBloc, NotificationState>(
+                  builder: (context, state) {
+                    if (state is NotificationLoaded && state.notifications.isNotEmpty) {
+                      return TextButton(
+                        onPressed: () {
+                          List<int> allIds = state.notifications.map((e) => e.id).toList();
+                          context.read<NotificationBloc>().add(MarkNotificationsAsReadEvent(allIds));
+                        },
+                        child: Text(
+                          "تعليم الكل كمقروء",
+                          style: TextStyle(
+                            color: colors.primary,
+                            fontSize: AppFontSizes.bodySmall,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ],
             ),
-            body: BlocBuilder<NotificationBloc, NotificationState>(
+            body: BlocConsumer<NotificationBloc, NotificationState>(
+              listener: (context, state) {},
               builder: (context, state) {
                 if (state is NotificationLoading) {
                   return Center(
@@ -65,73 +93,179 @@ class NotificationView extends StatelessWidget {
                   return ListView.separated(
                     padding: AppSpacing.allMd,
                     itemCount: state.notifications.length,
-                    separatorBuilder: (context, index) =>
-                    const SizedBox(height: 15),
+                    separatorBuilder: (context, index) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final item = state.notifications[index];
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: AppRadius.mdRadius,
-                          border: Border.all(color: const Color(0xFFF1F5F9)),
-                        ),
-                        padding: AppSpacing.allMd,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: colors.primary.withOpacity(0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.notifications_outlined,
-                                color: colors.primary,
-                                size: 22,
-                              ),
+                      final bool isUnread = item.readDate == null;
+
+                      return InkWell(
+                        onTap: () {
+                          if (isUnread) {
+                            context.read<NotificationBloc>().add(MarkSingleNotificationAsRead(item.id));
+                          }
+                        },
+                        borderRadius: AppRadius.mdRadius,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isUnread ? colors.primary.withOpacity(0.03) : Colors.white,
+                            borderRadius: AppRadius.mdRadius,
+                            border: Border.all(
+                              color: isUnread ? colors.primary.withOpacity(0.25) : const Color(0xFFE2E8F0),
+                              width: isUnread ? 1.5 : 1.0,
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.02),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Stack(
+                                clipBehavior: Clip.none,
                                 children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          item.title,
-                                          style: TextStyle(
-                                            fontSize: AppFontSizes.bodyLarge,
-                                            fontWeight: FontWeight.bold,
-                                            color: colors.textMain,
-                                          ),
-                                        ),
-                                      ),
-                                      Text(
-                                        item.createDate,
-                                        style: TextStyle(
-                                          fontSize: AppFontSizes.caption,
-                                          color: colors.textSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    item.body,
-                                    style: TextStyle(
-                                      color: colors.textSecondary,
-                                      fontSize: AppFontSizes.bodySmall,
-                                      height: 1.4,
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: colors.primary.withOpacity(0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.notifications_rounded,
+                                      color: colors.primary,
+                                      size: 24,
                                     ),
                                   ),
+                                  if (isUnread)
+                                    Positioned(
+                                      top: -2,
+                                      right: -2,
+                                      child: Container(
+                                        width: 12,
+                                        height: 12,
+                                        decoration: BoxDecoration(
+                                          color: Colors.redAccent,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(color: Colors.white, width: 2),
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            item.title,
+                                            style: TextStyle(
+                                              fontSize: AppFontSizes.bodyLarge,
+                                              fontWeight: isUnread ? FontWeight.w800 : FontWeight.w600,
+                                              color: colors.textMain,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        // تنسيق تاريخ إنشاء الإشعار في الأعلى
+                                        Text(
+                                          _formatDateTime(item.createDate),
+                                          style: TextStyle(
+                                            fontSize: AppFontSizes.caption - 2,
+                                            color: colors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      item.body,
+                                      style: TextStyle(
+                                        color: colors.textSecondary,
+                                        fontSize: AppFontSizes.bodySmall,
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 6,
+                                      children: [
+                                        if (item.type.isNotEmpty)
+                                          _buildChip(
+                                            label: item.type,
+                                            color: colors.primary,
+                                            backgroundColor: colors.primary.withOpacity(0.08),
+                                          ),
+                                        if (item.state.isNotEmpty)
+                                          _buildChip(
+                                            label: item.state,
+                                            color: Colors.orange.shade800,
+                                            backgroundColor: Colors.orange.withOpacity(0.08),
+                                          ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 10),
+                                    const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                                    const SizedBox(height: 8),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(Icons.send_outlined, size: 11, color: colors.textSecondary),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                // تنسيق وقت وتاريخ الإرسال
+                                                "الإرسال: ${_formatDateTime(item.sentDate)}",
+                                                style: TextStyle(fontSize: 10, color: colors.textSecondary),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              isUnread ? Icons.access_time : Icons.done_all,
+                                              size: 11,
+                                              color: isUnread ? Colors.orange : Colors.green,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                // تنسيق وقت وتاريخ القراءة أو حالة غير مقروء
+                                                isUnread
+                                                    ? "الحالة: غير مقروء"
+                                                    : "القراءة: ${_formatDateTime(item.readDate)}",
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: isUnread ? Colors.orange : Colors.green,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },
@@ -155,5 +289,33 @@ class NotificationView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildChip({required String label, required Color color, required Color backgroundColor}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  String _formatDateTime(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty) return 'غير متوفر';
+    try {
+      DateTime parsedDate = DateTime.parse(dateStr);
+      return intl.DateFormat('dd/MM/yyyy  hh:mm:ss a').format(parsedDate);
+    } catch (e) {
+      return dateStr;
+    }
   }
 }

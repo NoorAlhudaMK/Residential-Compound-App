@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../Core/CacheManager/cache_manager.dart';
+import '../../../../Data/Models/maintenance_category_model.dart';
+import '../../../../Data/Models/priority_model.dart';
 import '../../../../Data/Repositories/maintenance_repository.dart';
 import 'add_maintenance_event.dart';
 import 'add_maintenance_state.dart';
@@ -11,19 +13,41 @@ class AddMaintenanceBloc
   final MaintenanceRepository repository;
 
   AddMaintenanceBloc({required this.repository})
-      : super(AddMaintenanceState()) {
+      : super(const AddMaintenanceState()) {
+
+    on<LoadInitialDataEvent>((event, emit) async {
+      emit(state.copyWith(isLoading: true, errorMessage: null, isSuccess: false));
+      try {
+        final token = await CacheManager.getToken();
+        if (token == null) throw Exception("التوكن غير متوفر، يرجى تسجيل الدخول مجدداً.");
+
+        final results = await Future.wait([
+          repository.getCategories(token),
+          repository.getPriorities(token),
+        ]);
+
+        final categoriesList = results[0] as List<MaintenanceCategoryModel>;
+        final prioritiesList = results[1] as List<PriorityModel>;
+
+        emit(state.copyWith(
+          isLoading: false,
+          categories: categoriesList,
+          priorities: prioritiesList,
+          selectedCategoryId: categoriesList.isNotEmpty ? categoriesList.first.id : null,
+          selectedPriority: prioritiesList.isNotEmpty ? prioritiesList.first.id.toString() : '',
+          isSuccess: false,
+        ));
+      } catch (e) {
+        emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
+      }
+    });
 
     on<LoadCategoriesEvent>((event, emit) async {
       emit(state.copyWith(isLoading: true, errorMessage: null));
       try {
         final token = await CacheManager.getToken();
-
         final categoriesList = await repository.getCategories(token!);
-
-        emit(state.copyWith(
-          isLoading: false,
-          categories: categoriesList,
-        ));
+        emit(state.copyWith(isLoading: false, categories: categoriesList));
       } catch (e) {
         emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
       }
@@ -59,35 +83,44 @@ class AddMaintenanceBloc
     });
 
     on<RemoveImage>((event, emit) {
-      final newList = List<File>.from(state.selectedImages)
-        ..removeAt(event.index);
+      final newList = List<File>.from(state.selectedImages)..removeAt(event.index);
       emit(state.copyWith(selectedImages: newList));
     });
 
     on<SubmitTicket>((event, emit) async {
-      emit(state.copyWith(isLoading: true, errorMessage: null));
+      emit(state.copyWith(isLoading: true, errorMessage: null, isSuccess: false));
       try {
         final token = await CacheManager.getToken();
+        if (token == null) throw Exception("التوكن غير متوفر.");
+
         await repository.createTicket(
-          token: token!,
+          token: token,
           subject: event.subject,
           description: event.description,
           unitId: 1,
-          categoryId: state.selectedCategoryId ?? 1, // استخدام الفئة المختارة ديناميكياً
-          priority: state.selectedPriority, // استخدام الأولوية المختارة ديناميكياً
+          categoryId: state.selectedCategoryId ?? 1, ///TODO: Bring the real ID 💡
+          priority: state.selectedPriority ?? '',
+          images: state.selectedImages,
         );
+
         emit(
           state.copyWith(
             isLoading: false,
+            isSuccess: true,
             currentStep: 1,
+            titleText: "",
             descriptionText: "",
-            selectedCategoryId: null,
+            selectedCategoryId: state.categories.isNotEmpty ? state.categories.first.id : null,
             selectedImages: [],
           ),
         );
       } catch (e) {
-        emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
+        emit(state.copyWith(isLoading: false, errorMessage: e.toString(), isSuccess: false));
       }
+    });
+
+    on<UpdateTitleText>((event, emit) {
+      emit(state.copyWith(titleText: event.title));
     });
   }
 }

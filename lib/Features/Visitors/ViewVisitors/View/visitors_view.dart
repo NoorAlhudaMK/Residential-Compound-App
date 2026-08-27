@@ -1,3 +1,4 @@
+import 'package:anydrawer/anydrawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:share_plus/share_plus.dart';
@@ -5,6 +6,7 @@ import '../../../../Core/Colors/app_colors.dart';
 import '../../../../Core/UIConstants/aivio_font_sizes.dart';
 import '../../../../Core/UIConstants/aivio_icon_sizes.dart';
 import '../../../../Core/UIConstants/aivio_spacing.dart';
+import '../../../Drawer/View/drawer_view.dart';
 import '../../../MainPage/View/main_home_page.dart';
 import '../../AddNewVisitor/View/add_new_visitor.dart';
 import '../BLoC/visitors_bloc.dart';
@@ -103,7 +105,12 @@ class _VisitorViewState extends State<VisitorView> {
           leading: IconButton(
             icon: Icon(Icons.menu, size: AppIconSizes.md, color: colors.textMain),
             onPressed: () {
-              MainHomePage.drawerController.toggle();
+              showDrawer(
+                context,
+                builder: (context) {
+                  return AppDrawer();
+                },
+              );
             },
           ),
           actions: [

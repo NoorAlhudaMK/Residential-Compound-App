@@ -7,7 +7,7 @@ class NotificationModel {
   final String createDate;
   final String sentDate;
   final String? readDate;
-  final dynamic relatedModel; // تم تعديلها إلى dynamic لتتقبل bool أو String أو null
+  final dynamic relatedModel;
   final int relatedResId;
 
   NotificationModel({

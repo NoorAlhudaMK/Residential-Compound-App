@@ -1,3 +1,4 @@
+import 'package:anydrawer/anydrawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -7,6 +8,7 @@ import '../../../../Core/UIConstants/aivio_font_sizes.dart';
 import '../../../../Core/UIConstants/aivio_icon_sizes.dart';
 import '../../../../Core/UIConstants/aivio_spacing.dart';
 import '../../../../Data/Models/maintenance_ticket_model.dart';
+import '../../../Drawer/View/drawer_view.dart';
 import '../../../MainPage/View/main_home_page.dart';
 import '../../AddMaintenanceTicket/View/add_new_maintenance_view.dart';
 import '../BLoC/maintenance_bloc.dart';
@@ -23,13 +25,6 @@ class MaintenanceView extends StatefulWidget {
 class _MaintenanceViewState extends State<MaintenanceView> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-
-  final List<Map<String, String>> _statuses = [
-    {'key': 'all', 'label': 'الكل'},
-    {'key': 'open', 'label': 'النشطة'},
-    {'key': 'completed', 'label': 'المكتملة'},
-    {'key': 'cancelled', 'label': 'الملغاة'},
-  ];
 
   @override
   void initState() {
@@ -88,7 +83,12 @@ class _MaintenanceViewState extends State<MaintenanceView> {
           leading: IconButton(
             icon: Icon(Icons.menu, size: AppIconSizes.md, color: colors.textMain),
             onPressed: () {
-              MainHomePage.drawerController.toggle();
+              showDrawer(
+                context,
+                builder: (context) {
+                  return AppDrawer();
+                },
+              );
             },
           ),
           actions: [
@@ -515,5 +515,55 @@ class _MaintenanceViewState extends State<MaintenanceView> {
             },
           ),
     );
+  }
+
+  IconData _getIconData(String iconName) {
+    switch (iconName.toLowerCase().trim()) {
+      case 'water_drop_outlined':
+        return Icons.water_drop_outlined;
+      case 'air':
+        return Icons.air;
+      case 'bolt':
+        return Icons.bolt;
+      case 'unfold_more':
+        return Icons.unfold_more;
+      case 'auto_awesome':
+        return Icons.auto_awesome;
+      case 'build_outlined':
+        return Icons.build_outlined;
+      case 'plumbing':
+        return Icons.plumbing;
+      case 'carpenter':
+        return Icons.carpenter;
+      default:
+        return Icons.build_rounded;
+    }
+  }
+
+  Color _getCategoryColor(int colorCode, AppColors appColors) {
+    switch (colorCode) {
+      case 5:
+        return Colors.purple;
+      case 6:
+        return Colors.teal;
+      case 7:
+        return Colors.orange;
+      case 8:
+        return Colors.indigo;
+      case 9:
+        return Colors.pink;
+      case 10:
+        return Colors.cyan;
+      case 11:
+        return Colors.amber.shade700;
+      case 12:
+        return Colors.deepOrange;
+      case 1:
+        return appColors.primary;
+      case 2:
+        return Colors.blue;
+      default:
+        return appColors.primary;
+    }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:anydrawer/anydrawer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,9 +19,11 @@ import '../../../Data/Models/announcement_model.dart';
 import '../../../Data/Models/user_model.dart';
 import '../../../Data/Models/dashboard_data_model.dart';
 import '../../../Data/Repositories/community_repository.dart';
+import '../../AnnouncementDetails/View/announcement_details_view.dart';
 import '../../Community/BLoC/community_bloc.dart';
 import '../../Community/BLoC/community_event.dart';
 import '../../Community/BLoC/community_state.dart';
+import '../../Drawer/View/drawer_view.dart';
 import '../../MainPage/BLoC/home_bloc.dart';
 import '../../MainPage/BLoC/home_event.dart';
 
@@ -69,9 +72,7 @@ class _DashboardViewState extends State<DashboardView> {
           builder: (context, state) {
             return Scaffold(
               backgroundColor: colors.scaffoldBackground,
-              appBar: state is DashboardLoaded
-                  ? _buildHeader(colors, state.user, context)
-                  : null,
+              appBar: _buildHeader(colors, context),
               body: _buildBody(state, colors, context),
             );
           },
@@ -82,17 +83,12 @@ class _DashboardViewState extends State<DashboardView> {
 
   PreferredSizeWidget _buildHeader(
     AppColors colors,
-    UserModel user,
     BuildContext context,
   ) {
-    final profile = user.residentProfiles.isNotEmpty
-        ? user.residentProfiles.first
-        : null;
-
     return AppBar(
       backgroundColor: colors.scaffoldBackground,
       title: Text(
-        "مرحباً، ${user.name}",
+        "مــجــمــع آيــفــيــو الــســكــنــي",
         style: TextStyle(
           fontSize: AppFontSizes.headingSmall,
           fontWeight: FontWeight.bold,
@@ -108,8 +104,13 @@ class _DashboardViewState extends State<DashboardView> {
         builder: (context) {
           return IconButton(
             icon: Icon(Icons.menu, size: AppIconSizes.md, color: colors.textMain),
-            onPressed: () {
-              MainHomePage.drawerController.toggle();
+            onPressed: () async {
+              showDrawer(
+                context,
+                builder: (context) {
+                  return AppDrawer();
+                },
+              );
             },
           );
         },
@@ -134,6 +135,7 @@ class _DashboardViewState extends State<DashboardView> {
     AppColors colors,
     BuildContext context,
   ) {
+
     if (state is DashboardLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -296,43 +298,51 @@ class _DashboardViewState extends State<DashboardView> {
               final announcement = announcements[index];
               return GestureDetector(
                 onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(20),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AnnouncementDetailsView(
+                        announcement: announcement,
                       ),
                     ),
-                    builder: (context) {
-                      return Container(
-                        padding: EdgeInsets.all(AppSpacing.xl),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              announcement.title,
-                              style: TextStyle(
-                                fontSize: AppFontSizes.headingSmall,
-                                fontWeight: FontWeight.bold,
-                                color: colors.textMain,
-                              ),
-                            ),
-                            SizedBox(height: AppSpacing.md),
-                            Text(
-                              announcement.subtitle,
-                              style: TextStyle(
-                                fontSize: AppFontSizes.bodyMedium,
-                                color: colors.textSecondary,
-                                height: 1.5,
-                              ),
-                            ),
-                            SizedBox(height: AppSpacing.lg),
-                          ],
-                        ),
-                      );
-                    },
                   );
+                  // showModalBottomSheet(
+                  //   context: context,
+                  //   shape: const RoundedRectangleBorder(
+                  //     borderRadius: BorderRadius.vertical(
+                  //       top: Radius.circular(20),
+                  //     ),
+                  //   ),
+                  //   builder: (context) {
+                  //     return Container(
+                  //       padding: EdgeInsets.all(AppSpacing.xl),
+                  //       child: Column(
+                  //         mainAxisSize: MainAxisSize.min,
+                  //         crossAxisAlignment: CrossAxisAlignment.start,
+                  //         children: [
+                  //           Text(
+                  //             announcement.title,
+                  //             style: TextStyle(
+                  //               fontSize: AppFontSizes.headingSmall,
+                  //               fontWeight: FontWeight.bold,
+                  //               color: colors.textMain,
+                  //             ),
+                  //           ),
+                  //           SizedBox(height: AppSpacing.md),
+                  //           Text(
+                  //             announcement.subtitle,
+                  //             style: TextStyle(
+                  //               fontSize: AppFontSizes.bodyMedium,
+                  //               color: colors.textSecondary,
+                  //               height: 1.5,
+                  //             ),
+                  //           ),
+                  //           SizedBox(height: AppSpacing.lg),
+                  //         ],
+                  //       ),
+                  //     );
+                  //   },
+                  // );
                 },
                 child: Container(
                   margin: EdgeInsets.symmetric(horizontal: AppSpacing.xs),
