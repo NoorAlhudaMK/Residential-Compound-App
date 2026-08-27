@@ -7,9 +7,7 @@ import 'package:smart_stepper/smart_stepper.dart';
 import '../../../../Core/Colors/app_colors.dart';
 import '../../../../Core/UIConstants/aivio_border_radius.dart';
 import '../../../../Core/UIConstants/aivio_font_sizes.dart';
-import '../../../../Core/UIConstants/aivio_icon_sizes.dart';
 import '../../../../Core/UIConstants/aivio_spacing.dart';
-import '../../../../Data/Models/maintenance_category_model.dart';
 import '../../../../Data/Repositories/maintenance_repository.dart';
 import '../BLoC/add_maintenance_bloc.dart';
 import '../BLoC/add_maintenance_event.dart';
@@ -23,7 +21,7 @@ class NewMaintenanceRequestView extends StatelessWidget {
     return BlocProvider(
       create: (context) => AddMaintenanceBloc(
         repository: MaintenanceRepository(),
-      )..add(LoadCategoriesEvent()), // جلب الفئات فور فتح الصفحة
+      )..add(LoadInitialDataEvent()),
       child: const _NewMaintenanceRequestViewBody(),
     );
   }
@@ -39,16 +37,19 @@ class _NewMaintenanceRequestViewBody extends StatefulWidget {
 
 class _NewMaintenanceRequestViewBodyState
     extends State<_NewMaintenanceRequestViewBody> {
+  late final TextEditingController _titleController;
   late final TextEditingController _descriptionController;
 
   @override
   void initState() {
     super.initState();
+    _titleController = TextEditingController();
     _descriptionController = TextEditingController();
   }
 
   @override
   void dispose() {
+    _titleController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
@@ -74,10 +75,7 @@ class _NewMaintenanceRequestViewBodyState
               backgroundColor: Colors.red,
             ),
           );
-        } else if (!state.isLoading &&
-            state.currentStep == 1 &&
-            state.descriptionText.isEmpty &&
-            state.selectedCategoryId == null) {
+        } else if (state.isSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text("تم إرسال الطلب بنجاح"),
@@ -88,6 +86,15 @@ class _NewMaintenanceRequestViewBodyState
         }
       },
       builder: (context, state) {
+        // مزامنة حقل العنوان مع الـ State
+        if (_titleController.text != state.titleText) {
+          _titleController.text = state.titleText;
+          _titleController.selection = TextSelection.fromPosition(
+            TextPosition(offset: _titleController.text.length),
+          );
+        }
+
+        // مزامنة حقل الوصف مع الـ State
         if (_descriptionController.text != state.descriptionText) {
           _descriptionController.text = state.descriptionText;
           _descriptionController.selection = TextSelection.fromPosition(
@@ -154,19 +161,19 @@ class _NewMaintenanceRequestViewBodyState
                               isRequired: true,
                             ),
                             SizedBox(height: AppSpacing.md),
-                            // عرض الفئات الجاية من الـ API ديناميكياً
                             _buildCategoriesList(context, state, colors),
                           ] else if (state.currentStep == 2) ...[
                             _buildStepHeader(
                               "2",
-                              "وصف المشكلة والأولوية",
+                              "تفاصيل المشكلة والأولوية",
                               colors,
                               isRequired: true,
                             ),
                             SizedBox(height: AppSpacing.md),
+                            _buildTitleField(context, colors), // حقل العنوان الجديد
+                            SizedBox(height: AppSpacing.md),
                             _buildDescriptionField(context, colors),
                             SizedBox(height: AppSpacing.lg),
-                            // حقل اختيار الأولوية (Priority)
                             _buildPriorityDropdown(context, state, colors),
                           ] else if (state.currentStep == 3) ...[
                             _buildStepHeader(
@@ -259,17 +266,29 @@ class _NewMaintenanceRequestViewBodyState
                               return;
                             }
 
-                            if (state.currentStep == 2 &&
-                                state.descriptionText.trim().isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Text(
-                                    "الرجاء كتابة وصف المشكلة أولاً للمتابعة",
+                            if (state.currentStep == 2) {
+                              if (state.titleText.trim().isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text(
+                                      "الرجاء كتابة عنوان المشكلة أولاً للمتابعة",
+                                    ),
+                                    backgroundColor: colors.danger,
                                   ),
-                                  backgroundColor: colors.danger,
-                                ),
-                              );
-                              return;
+                                );
+                                return;
+                              }
+                              if (state.descriptionText.trim().isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text(
+                                      "الرجاء كتابة وصف المشكلة أولاً للمتابعة",
+                                    ),
+                                    backgroundColor: colors.danger,
+                                  ),
+                                );
+                                return;
+                              }
                             }
 
                             if (state.currentStep < 3) {
@@ -277,22 +296,9 @@ class _NewMaintenanceRequestViewBodyState
                                 NextStepEvent(),
                               );
                             } else {
-                              final selectedCatName = state.categories
-                                  .firstWhere(
-                                    (c) => c.id == state.selectedCategoryId,
-                                orElse: () => MaintenanceCategoryModel(
-                                  id: 0,
-                                  name: "صيانة عامة",
-                                  description: "", code: '',
-                                  teamId: 1,
-                                  active: true,
-                                ),
-                              )
-                                  .name;
-
                               context.read<AddMaintenanceBloc>().add(
                                 SubmitTicket(
-                                  subject: selectedCatName,
+                                  subject: state.titleText,
                                   description: state.descriptionText,
                                 ),
                               );
@@ -338,18 +344,7 @@ class _NewMaintenanceRequestViewBodyState
       }) {
     return Row(
       children: [
-        // CircleAvatar(
-        //   radius: AppIconSizes.sm,
-        //   backgroundColor: colors.primary,
-        //   child: Text(
-        //     number,
-        //     style: TextStyle(
-        //       color: Colors.white,
-        //       fontSize: AppFontSizes.caption,
-        //     ),
-        //   ),
-        // ),
-         SizedBox(width: AppSpacing.sm),
+        SizedBox(width: AppSpacing.sm),
         Text(
           title,
           style: TextStyle(
@@ -371,7 +366,6 @@ class _NewMaintenanceRequestViewBodyState
     );
   }
 
-  // عرض الفئات المسترجعة من النظام ديناميكياً
   Widget _buildCategoriesList(
       BuildContext context,
       AddMaintenanceState state,
@@ -393,6 +387,10 @@ class _NewMaintenanceRequestViewBodyState
         final category = state.categories[index];
         final isSelected = state.selectedCategoryId == category.id;
 
+        // استخراج الأيقونة واللون الخاص بالفئة
+        final categoryIcon = _getIconData(category.icon);
+        final categoryColor = _getCategoryColor(category.color, colors);
+
         return GestureDetector(
           onTap: () => context.read<AddMaintenanceBloc>().add(
             SelectCategory(category.id),
@@ -410,9 +408,18 @@ class _NewMaintenanceRequestViewBodyState
             ),
             child: Row(
               children: [
-                Icon(
-                  isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
-                  color: isSelected ? colors.primary : colors.textSecondary,
+                // عرض أيقونة الفئة بخلفية ملونة شفافة
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: categoryColor.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    categoryIcon,
+                    color: categoryColor,
+                    size: 24,
+                  ),
                 ),
                 SizedBox(width: AppSpacing.md),
                 Expanded(
@@ -427,24 +434,70 @@ class _NewMaintenanceRequestViewBodyState
                           color: colors.textMain,
                         ),
                       ),
-                      if (category.description.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          category.description,
-                          style: TextStyle(
-                            fontSize: AppFontSizes.caption,
-                            color: colors.textSecondary,
-                          ),
-                        ),
-                      ],
+
+                      // // يمكنك أيضاً إظهار اسم الفريق أو معلومات إضافية إن أردت
+                      // const SizedBox(height: 4),
+                      // Text(
+                      //   "الفريق المسؤول: ${category.teamName}",
+                      //   style: TextStyle(
+                      //     fontSize: AppFontSizes.caption - 1,
+                      //     color: colors.textSecondary,
+                      //   ),
+                      // ),
                     ],
                   ),
+                ),
+                SizedBox(width: AppSpacing.sm),
+                Icon(
+                  isSelected
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_off,
+                  color: isSelected ? colors.primary : colors.textSecondary,
                 ),
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildTitleField(BuildContext context, AppColors colors) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "عنوان المشكلة (Subject) *",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: AppFontSizes.bodyMedium,
+            color: colors.textMain,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: AppRadius.lgRadius,
+            border: Border.all(color: colors.inputBorder),
+          ),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: TextField(
+            controller: _titleController,
+            onChanged: (text) => context
+                .read<AddMaintenanceBloc>()
+                .add(UpdateTitleText(text)),
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              hintText: "أدخل عنواناً مختصراً للمشكلة...",
+              hintStyle: TextStyle(
+                color: colors.textSecondary,
+                fontSize: AppFontSizes.bodyMedium,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -488,12 +541,15 @@ class _NewMaintenanceRequestViewBodyState
     );
   }
 
-  // حقل اختيار الأولوية (Priority)
   Widget _buildPriorityDropdown(
       BuildContext context,
       AddMaintenanceState state,
       AppColors colors,
       ) {
+    if (state.priorities.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -517,12 +573,12 @@ class _NewMaintenanceRequestViewBodyState
             child: DropdownButton<String>(
               value: state.selectedPriority,
               isExpanded: true,
-              items: const [
-                DropdownMenuItem(value: "1", child: Text("منخفضة")),
-                DropdownMenuItem(value: "2", child: Text("متوسطة")),
-                DropdownMenuItem(value: "3", child: Text("عالية")),
-                DropdownMenuItem(value: "4", child: Text("طوارئ")),
-              ],
+              items: state.priorities.map((priority) {
+                return DropdownMenuItem(
+                  value: priority.id.toString(),
+                  child: Text(priority.name),
+                );
+              }).toList(),
               onChanged: (val) {
                 if (val != null) {
                   context.read<AddMaintenanceBloc>().add(SelectPriority(val));
@@ -563,6 +619,27 @@ class _NewMaintenanceRequestViewBodyState
                         ),
                       ),
                     ),
+                    Positioned(
+                      top: 4,
+                      left: 14,
+                      child: GestureDetector(
+                        onTap: () => context
+                            .read<AddMaintenanceBloc>()
+                            .add(RemoveImage(index)),
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          padding: const EdgeInsets.all(4),
+                          child: const Icon(
+                            Icons.close,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 );
               },
@@ -586,5 +663,55 @@ class _NewMaintenanceRequestViewBodyState
         ),
       ],
     );
+  }
+
+  IconData _getIconData(String iconName) {
+    switch (iconName.toLowerCase().trim()) {
+      case 'water_drop_outlined':
+        return Icons.water_drop_outlined;
+      case 'air':
+        return Icons.air;
+      case 'bolt':
+        return Icons.bolt;
+      case 'unfold_more':
+        return Icons.unfold_more;
+      case 'auto_awesome':
+        return Icons.auto_awesome;
+      case 'build_outlined':
+        return Icons.build_outlined;
+      case 'plumbing':
+        return Icons.plumbing;
+      case 'carpenter':
+        return Icons.carpenter;
+      default:
+        return Icons.build_rounded;
+    }
+  }
+
+  Color _getCategoryColor(int colorCode, AppColors appColors) {
+    switch (colorCode) {
+      case 5:
+        return Colors.purple;
+      case 6:
+        return Colors.teal;
+      case 7:
+        return Colors.orange;
+      case 8:
+        return Colors.indigo;
+      case 9:
+        return Colors.pink;
+      case 10:
+        return Colors.cyan;
+      case 11:
+        return Colors.amber.shade700;
+      case 12:
+        return Colors.deepOrange;
+      case 1:
+        return appColors.primary;
+      case 2:
+        return Colors.blue;
+      default:
+        return appColors.primary;
+    }
   }
 }

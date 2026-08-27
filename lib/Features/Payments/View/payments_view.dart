@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../Core/Colors/app_colors.dart';
+import '../../../Core/FormattedDateTime/formatted_price.dart';
 import '../../../Core/UIConstants/aivio_border_radius.dart';
 import '../../../Core/UIConstants/aivio_font_sizes.dart';
 import '../../../Core/UIConstants/aivio_icon_sizes.dart';
@@ -73,7 +74,7 @@ class _PaymentsBodyViewState extends State<PaymentsBodyView> {
           elevation: 0,
           scrolledUnderElevation: 0.0,
           title: Text(
-            "الفــواتــيــر والــمــدفــوعــات",
+            "الــمــدفــوعــات",
             style: TextStyle(
               color: colors.textMain,
               fontWeight: FontWeight.bold,
@@ -93,37 +94,36 @@ class _PaymentsBodyViewState extends State<PaymentsBodyView> {
         ),
         body: Column(
           children: [
-            // الفلتر الأفقي للحالات حسب الـ API
-            Container(
-              padding: AppSpacing.symmetricH,
-              height: 60,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: ['all', 'completed', 'paid', 'pending', 'draft', 'cancelled'].map((status) {
-                  final isSelected = _selectedStatus == status;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 10),
-                    child: ChoiceChip(
-                      label: Text(status.toUpperCase()),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        if (selected) {
-                          setState(() => _selectedStatus = status);
-                          context.read<PaymentsBloc>().add(
-                            FetchPaymentsEvent(isRefresh: true, status: status),
-                          );
-                        }
-                      },
-                      selectedColor: colors.primary,
-                      labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : colors.textMain,
-                        fontSize: AppFontSizes.caption,
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
+            // Container(
+            //   padding: AppSpacing.symmetricH,
+            //   height: 60,
+            //   child: ListView(
+            //     scrollDirection: Axis.horizontal,
+            //     children: ['all', 'completed', 'paid', 'pending', 'draft', 'cancelled'].map((status) {
+            //       final isSelected = _selectedStatus == status;
+            //       return Padding(
+            //         padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 10),
+            //         child: ChoiceChip(
+            //           label: Text(status.toUpperCase()),
+            //           selected: isSelected,
+            //           onSelected: (selected) {
+            //             if (selected) {
+            //               setState(() => _selectedStatus = status);
+            //               context.read<PaymentsBloc>().add(
+            //                 FetchPaymentsEvent(isRefresh: true, status: status),
+            //               );
+            //             }
+            //           },
+            //           selectedColor: colors.primary,
+            //           labelStyle: TextStyle(
+            //             color: isSelected ? Colors.white : colors.textMain,
+            //             fontSize: AppFontSizes.caption,
+            //           ),
+            //         ),
+            //       );
+            //     }).toList(),
+            //   ),
+            // ),
             Expanded(
               child: BlocBuilder<PaymentsBloc, PaymentsState>(
                 builder: (context, state) {
@@ -164,7 +164,6 @@ class _PaymentsBodyViewState extends State<PaymentsBodyView> {
                         controller: _scrollController,
                         padding: AppSpacing.allMd,
                         children: [
-                          // بطاقة الملخص (Summary Card)
                           Container(
                             padding: AppSpacing.allMd,
                             decoration: BoxDecoration(
@@ -175,7 +174,28 @@ class _PaymentsBodyViewState extends State<PaymentsBodyView> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    const Text(
+                                      'المبلغ الإجمالي المدفوع',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: AppFontSizes.bodySmall,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${formatNumber(state.summary.totalPaid)} IQD',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: AppFontSizes.headingLarge,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     const Text(
                                       'إجمالي المدفوعات',
@@ -195,43 +215,21 @@ class _PaymentsBodyViewState extends State<PaymentsBodyView> {
                                     ),
                                   ],
                                 ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    const Text(
-                                      'المبلغ الإجمالي المدفوع',
-                                      style: TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: AppFontSizes.bodySmall,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '${state.summary.totalPaid} IQD',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: AppFontSizes.headingLarge,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
                               ],
                             ),
                           ),
                           const SizedBox(height: 16),
 
-                          // قائمة المدفوعات (Payments)
                           if (state.payments.isNotEmpty) ...[
-                            Text(
-                              'الــمــدفــوعــات',
-                              style: TextStyle(
-                                fontSize: AppFontSizes.headingSmall,
-                                fontWeight: FontWeight.bold,
-                                color: colors.textMain,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
+                            // Text(
+                            //   'الــمــدفــوعــات',
+                            //   style: TextStyle(
+                            //     fontSize: AppFontSizes.headingSmall,
+                            //     fontWeight: FontWeight.bold,
+                            //     color: colors.textMain,
+                            //   ),
+                            // ),
+                            // const SizedBox(height: 8),
                             ...state.payments.map((payment) => Container(
                               margin: const EdgeInsets.only(bottom: 12),
                               decoration: BoxDecoration(
@@ -273,7 +271,15 @@ class _PaymentsBodyViewState extends State<PaymentsBodyView> {
                                                 ),
                                               ),
                                             ),
+                                            payment.currency == 'IQD' ?
                                             Text(
+                                              '${formatNumber(payment.amount)} ${payment.currency}',
+                                              style: const TextStyle(
+                                                fontSize: AppFontSizes.bodyMedium,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.green,
+                                              ),
+                                            ) :  Text(
                                               '${payment.amount} ${payment.currency}',
                                               style: const TextStyle(
                                                 fontSize: AppFontSizes.bodyMedium,

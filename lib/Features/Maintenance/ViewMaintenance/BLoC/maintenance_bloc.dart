@@ -14,7 +14,6 @@ class MaintenanceBloc extends Bloc<MaintenanceEvent, MaintenanceState> {
     on<LoadMaintenanceData>(_onLoadMaintenanceData);
     on<SearchMaintenance>(_onSearchMaintenance);
     on<UpdateRating>(_onUpdateRating);
-    on<SubmitTicket>(_onSubmitTicket);
     on<RateTicket>(_onRateTicket);
     on<NextStepEvent>(_onNextStep);
     on<PreviousStepEvent>(_onPreviousStep);
@@ -85,33 +84,6 @@ class MaintenanceBloc extends Bloc<MaintenanceEvent, MaintenanceState> {
 
   void _onUpdateRating(UpdateRating event, Emitter<MaintenanceState> emit) {
     emit(state.copyWith(rating: event.rating));
-  }
-
-  Future<void> _onSubmitTicket(
-      SubmitTicket event,
-      Emitter<MaintenanceState> emit,
-      ) async {
-    emit(state.copyWith(isLoading: true, errorMessage: null));
-    try {
-      final token = await CacheManager.getToken();
-      await repository.createTicket(
-        token: token!,
-        subject: event.subject,
-        description: event.description,
-        unitId: 1,
-        categoryId: 1,
-        priority: "2",
-      );
-      emit(state.copyWith(
-        isLoading: false,
-        currentStep: 1,
-        descriptionText: "",
-        selectedService: "",
-      ));
-      add(LoadMaintenanceData(page: 1));
-    } catch (e) {
-      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
-    }
   }
 
   Future<void> _onRateTicket(

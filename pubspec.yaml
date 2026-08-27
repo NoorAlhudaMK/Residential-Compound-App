@@ -61,6 +61,8 @@ dependencies:
   smooth_page_indicator: ^2.0.1
   infinite_scroll_pagination: ^5.1.1
   drawerbehavior: ^3.0.4
+  anydrawer: ^2.1.0
+  introduction_screen: ^4.0.0
 
 dev_dependencies:
   flutter_test:
