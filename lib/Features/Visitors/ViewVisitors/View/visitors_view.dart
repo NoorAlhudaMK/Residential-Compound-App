@@ -154,7 +154,7 @@ class _VisitorViewState extends State<VisitorView> {
                       ),
                     ),
                     Text(
-                      "الــخــدمــات",
+                      "الزوار",
                       style: TextStyle(
                         color: colors.textMain,
                         fontWeight: FontWeight.bold,
@@ -185,7 +185,7 @@ class _VisitorViewState extends State<VisitorView> {
                               color: Colors.white,
                             ),
                             Text(
-                              "طلب جديد",
+                              "إضافة زائر",
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
