@@ -8,6 +8,9 @@ import '../../Data/Models/user_model.dart';
 class CacheManager {
   static const _secureStorage = FlutterSecureStorage();
 
+  // مفتاح تخزين الثيم
+  static const String _themeKey = 'is_dark_theme';
+
   static Future<void> saveSensitiveData({required String token}) async {
     await _secureStorage.write(key: 'auth_token', value: token);
   }
@@ -38,6 +41,18 @@ class CacheManager {
     } else {
       throw Exception("لا توجد بيانات مستخدم محفوظة في الكاش");
     }
+  }
+
+  // === دوال إدارة الثيم ===
+
+  static Future<void> saveThemeMode({required bool isDark}) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_themeKey, isDark);
+  }
+
+  static Future<bool> getThemeMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_themeKey) ?? false;
   }
 
   static Future<void> clearAll() async {

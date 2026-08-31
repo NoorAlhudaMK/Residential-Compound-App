@@ -86,15 +86,12 @@ class _NewMaintenanceRequestViewBodyState
         }
       },
       builder: (context, state) {
-        // مزامنة حقل العنوان مع الـ State
         if (_titleController.text != state.titleText) {
           _titleController.text = state.titleText;
           _titleController.selection = TextSelection.fromPosition(
             TextPosition(offset: _titleController.text.length),
           );
         }
-
-        // مزامنة حقل الوصف مع الـ State
         if (_descriptionController.text != state.descriptionText) {
           _descriptionController.text = state.descriptionText;
           _descriptionController.selection = TextSelection.fromPosition(
@@ -108,7 +105,7 @@ class _NewMaintenanceRequestViewBodyState
             child: Scaffold(
               backgroundColor: colors.scaffoldBackground,
               appBar: AppBar(
-                backgroundColor: Colors.white,
+                backgroundColor: colors.scaffoldBackground,
                 elevation: 0,
                 leading: IconButton(
                   icon: Icon(
@@ -379,15 +376,20 @@ class _NewMaintenanceRequestViewBodyState
       return const Center(child: Text("لا توجد فئات صيانة متاحة حالياً"));
     }
 
-    return ListView.builder(
+    return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: state.categories.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 1.3,
+      ),
       itemBuilder: (context, index) {
         final category = state.categories[index];
         final isSelected = state.selectedCategoryId == category.id;
 
-        // استخراج الأيقونة واللون الخاص بالفئة
         final categoryIcon = _getIconData(category.icon);
         final categoryColor = _getCategoryColor(category.color, colors);
 
@@ -396,7 +398,6 @@ class _NewMaintenanceRequestViewBodyState
             SelectCategory(category.id),
           ),
           child: Container(
-            margin: const EdgeInsets.only(bottom: 12),
             padding: EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -406,53 +407,45 @@ class _NewMaintenanceRequestViewBodyState
                 width: isSelected ? 2 : 1,
               ),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // عرض أيقونة الفئة بخلفية ملونة شفافة
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: categoryColor.withOpacity(0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    categoryIcon,
-                    color: categoryColor,
-                    size: 24,
-                  ),
-                ),
-                SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        category.name,
-                        style: TextStyle(
-                          fontSize: AppFontSizes.bodyMedium,
-                          fontWeight: FontWeight.bold,
-                          color: colors.textMain,
-                        ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // عرض أيقونة الفئة بخلفية ملونة شفافة
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: categoryColor.withOpacity(0.15),
+                        shape: BoxShape.circle,
                       ),
-
-                      // // يمكنك أيضاً إظهار اسم الفريق أو معلومات إضافية إن أردت
-                      // const SizedBox(height: 4),
-                      // Text(
-                      //   "الفريق المسؤول: ${category.teamName}",
-                      //   style: TextStyle(
-                      //     fontSize: AppFontSizes.caption - 1,
-                      //     color: colors.textSecondary,
-                      //   ),
-                      // ),
-                    ],
-                  ),
+                      child: Icon(
+                        categoryIcon,
+                        color: categoryColor,
+                        size: 20,
+                      ),
+                    ),
+                    Icon(
+                      isSelected
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_off,
+                      color: isSelected ? colors.primary : colors.textSecondary,
+                      size: 20,
+                    ),
+                  ],
                 ),
-                SizedBox(width: AppSpacing.sm),
-                Icon(
-                  isSelected
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_off,
-                  color: isSelected ? colors.primary : colors.textSecondary,
+                const SizedBox(height: 8),
+                Text(
+                  category.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: AppFontSizes.bodyMedium,
+                    fontWeight: FontWeight.bold,
+                    color: colors.textMain,
+                  ),
                 ),
               ],
             ),

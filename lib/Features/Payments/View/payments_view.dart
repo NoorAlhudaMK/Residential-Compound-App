@@ -231,11 +231,11 @@ class _PaymentsBodyViewState extends State<PaymentsBodyView> {
                             // ),
                             // const SizedBox(height: 8),
                             ...state.payments.map((payment) => Container(
-                              margin: const EdgeInsets.only(bottom: 12),
+                              margin: EdgeInsets.only(bottom: 12),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: colors.inputFill,
                                 borderRadius: AppRadius.mdRadius,
-                                border: Border.all(color: const Color(0xFFF1F5F9)),
+                                border: Border.all(color: colors.inputBorder,),
                               ),
                               padding: AppSpacing.allMd,
                               child: Row(
@@ -244,12 +244,12 @@ class _PaymentsBodyViewState extends State<PaymentsBodyView> {
                                   Container(
                                     padding: const EdgeInsets.all(10),
                                     decoration: BoxDecoration(
-                                      color: colors.primary.withOpacity(0.1),
+                                      color: colors.primary.withOpacity(0.2),
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
                                       Icons.payments_outlined,
-                                      color: colors.primary,
+                                      color: colors.paymentIcon,
                                       size: 22,
                                     ),
                                   ),
@@ -273,18 +273,18 @@ class _PaymentsBodyViewState extends State<PaymentsBodyView> {
                                             ),
                                             payment.currency == 'IQD' ?
                                             Text(
-                                              '${formatNumber(payment.amount)} ${payment.currency}',
-                                              style: const TextStyle(
+                                              '${formatNumber(payment.amount)} د.ع ',
+                                              style: TextStyle(
                                                 fontSize: AppFontSizes.bodyMedium,
                                                 fontWeight: FontWeight.bold,
-                                                color: Colors.green,
+                                                color: colors.textMain,
                                               ),
                                             ) :  Text(
                                               '${payment.amount} ${payment.currency}',
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: AppFontSizes.bodyMedium,
                                                 fontWeight: FontWeight.bold,
-                                                color: Colors.green,
+                                                color: colors.primary,
                                               ),
                                             ),
                                           ],
@@ -296,7 +296,7 @@ class _PaymentsBodyViewState extends State<PaymentsBodyView> {
                                             Text(
                                               'التاريخ: ${payment.date}',
                                               style: TextStyle(
-                                                fontSize: AppFontSizes.caption,
+                                                fontSize: AppFontSizes.bodySmall,
                                                 color: colors.textSecondary,
                                               ),
                                             ),

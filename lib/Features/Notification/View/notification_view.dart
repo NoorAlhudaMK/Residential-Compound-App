@@ -18,7 +18,8 @@ class NotificationView extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors();
     return BlocProvider(
-      create: (context) => NotificationBloc(NotificationRepository())..add(LoadNotifications()),
+      create: (context) =>
+          NotificationBloc(NotificationRepository())..add(LoadNotifications()),
       child: SafeArea(
         child: Directionality(
           textDirection: TextDirection.rtl,
@@ -31,34 +32,48 @@ class NotificationView extends StatelessWidget {
               title: Text(
                 "الإشــعــارات",
                 style: TextStyle(
-                  color: colors.textMain,
+                  color: colors.textAppBar,
                   fontWeight: FontWeight.bold,
                   fontSize: AppFontSizes.headingSmall,
                 ),
               ),
               centerTitle: true,
-              automaticallyImplyLeading: false,
               leading: IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: Icon(
-                  Icons.arrow_back_ios_new,
-                  size: AppIconSizes.md,
-                  color: colors.textMain,
+                icon: Container(
+                  padding: AppSpacing.allSm,
+                  decoration: BoxDecoration(
+                    color: colors.inputFill,
+                    borderRadius: AppRadius.mdRadius,
+                    border: Border.all(color: colors.inputBorder),
+                  ),
+                  child: Icon(
+                    Icons.arrow_back_outlined,
+                    color: colors.textMain,
+                    size: AppIconSizes.md,
+                  ),
                 ),
+                onPressed: () => Navigator.pop(context),
               ),
+              automaticallyImplyActions: false,
+              automaticallyImplyLeading: false,
               actions: [
                 BlocBuilder<NotificationBloc, NotificationState>(
                   builder: (context, state) {
-                    if (state is NotificationLoaded && state.notifications.isNotEmpty) {
+                    if (state is NotificationLoaded &&
+                        state.notifications.isNotEmpty) {
                       return TextButton(
                         onPressed: () {
-                          List<int> allIds = state.notifications.map((e) => e.id).toList();
-                          context.read<NotificationBloc>().add(MarkNotificationsAsReadEvent(allIds));
+                          List<int> allIds = state.notifications
+                              .map((e) => e.id)
+                              .toList();
+                          context.read<NotificationBloc>().add(
+                            MarkNotificationsAsReadEvent(allIds),
+                          );
                         },
                         child: Text(
                           "تعليم الكل كمقروء",
                           style: TextStyle(
-                            color: colors.primary,
+                            color: colors.textAppBar,
                             fontSize: AppFontSizes.bodySmall,
                             fontWeight: FontWeight.bold,
                           ),
@@ -93,7 +108,8 @@ class NotificationView extends StatelessWidget {
                   return ListView.separated(
                     padding: AppSpacing.allMd,
                     itemCount: state.notifications.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 12),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final item = state.notifications[index];
                       final bool isUnread = item.readDate == null;
@@ -101,16 +117,22 @@ class NotificationView extends StatelessWidget {
                       return InkWell(
                         onTap: () {
                           if (isUnread) {
-                            context.read<NotificationBloc>().add(MarkSingleNotificationAsRead(item.id));
+                            context.read<NotificationBloc>().add(
+                              MarkSingleNotificationAsRead(item.id),
+                            );
                           }
                         },
                         borderRadius: AppRadius.mdRadius,
                         child: Container(
                           decoration: BoxDecoration(
-                            color: isUnread ? colors.primary.withOpacity(0.03) : Colors.white,
+                            color: isUnread
+                                ? colors.primary.withOpacity(0.03)
+                                : colors.inputFill,
                             borderRadius: AppRadius.mdRadius,
                             border: Border.all(
-                              color: isUnread ? colors.primary.withOpacity(0.25) : const Color(0xFFE2E8F0),
+                              color: isUnread
+                                  ? colors.primary.withOpacity(0.25)
+                                  : colors.inputBorder,
                               width: isUnread ? 1.5 : 1.0,
                             ),
                             boxShadow: [
@@ -131,12 +153,12 @@ class NotificationView extends StatelessWidget {
                                   Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: colors.primary.withOpacity(0.1),
+                                      color: colors.textAppBar.withOpacity(0.1),
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
                                       Icons.notifications_rounded,
-                                      color: colors.primary,
+                                      color: colors.textAppBar,
                                       size: 24,
                                     ),
                                   ),
@@ -148,9 +170,12 @@ class NotificationView extends StatelessWidget {
                                         width: 12,
                                         height: 12,
                                         decoration: BoxDecoration(
-                                          color: Colors.redAccent,
+                                          color: colors.danger,
                                           shape: BoxShape.circle,
-                                          border: Border.all(color: Colors.white, width: 2),
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 2,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -162,28 +187,32 @@ class NotificationView extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Expanded(
                                           child: Text(
                                             item.title,
                                             style: TextStyle(
                                               fontSize: AppFontSizes.bodyLarge,
-                                              fontWeight: isUnread ? FontWeight.w800 : FontWeight.w600,
+                                              fontWeight: isUnread
+                                                  ? FontWeight.w800
+                                                  : FontWeight.w600,
                                               color: colors.textMain,
                                             ),
                                           ),
                                         ),
                                         const SizedBox(width: 8),
                                         // تنسيق تاريخ إنشاء الإشعار في الأعلى
-                                        Text(
-                                          _formatDateTime(item.createDate),
-                                          style: TextStyle(
-                                            fontSize: AppFontSizes.caption - 2,
-                                            color: colors.textSecondary,
-                                          ),
-                                        ),
+                                        // Text(
+                                        //   _formatDateTime(item.createDate),
+                                        //   style: TextStyle(
+                                        //     fontSize: AppFontSizes.caption - 2,
+                                        //     color: colors.textSecondary,
+                                        //   ),
+                                        // ),
                                       ],
                                     ),
                                     const SizedBox(height: 6),
@@ -204,31 +233,44 @@ class NotificationView extends StatelessWidget {
                                           _buildChip(
                                             label: item.type,
                                             color: colors.primary,
-                                            backgroundColor: colors.primary.withOpacity(0.08),
+                                            backgroundColor: colors.primary
+                                                .withOpacity(0.08),
                                           ),
                                         if (item.state.isNotEmpty)
                                           _buildChip(
                                             label: item.state,
                                             color: Colors.orange.shade800,
-                                            backgroundColor: Colors.orange.withOpacity(0.08),
+                                            backgroundColor: Colors.orange
+                                                .withOpacity(0.08),
                                           ),
                                       ],
                                     ),
                                     const SizedBox(height: 10),
-                                    const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                                     Divider(
+                                      height: 1,
+                                      color: colors.inputBorder,
+                                    ),
                                     const SizedBox(height: 8),
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Row(
                                           children: [
-                                            Icon(Icons.send_outlined, size: 11, color: colors.textSecondary),
+                                            Icon(
+                                              Icons.send_outlined,
+                                              size: 11,
+                                              color: colors.textSecondary,
+                                            ),
                                             const SizedBox(width: 4),
                                             Expanded(
                                               child: Text(
                                                 // تنسيق وقت وتاريخ الإرسال
                                                 "الإرسال: ${_formatDateTime(item.sentDate)}",
-                                                style: TextStyle(fontSize: 10, color: colors.textSecondary),
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: colors.textSecondary,
+                                                ),
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
@@ -238,20 +280,25 @@ class NotificationView extends StatelessWidget {
                                         Row(
                                           children: [
                                             Icon(
-                                              isUnread ? Icons.access_time : Icons.done_all,
+                                              isUnread
+                                                  ? Icons.access_time
+                                                  : Icons.done_all,
                                               size: 11,
-                                              color: isUnread ? Colors.orange : Colors.green,
+                                              color: isUnread
+                                                  ? Colors.orange
+                                                  : Colors.green,
                                             ),
                                             const SizedBox(width: 4),
                                             Expanded(
                                               child: Text(
-                                                // تنسيق وقت وتاريخ القراءة أو حالة غير مقروء
                                                 isUnread
                                                     ? "الحالة: غير مقروء"
                                                     : "القراءة: ${_formatDateTime(item.readDate)}",
                                                 style: TextStyle(
                                                   fontSize: 10,
-                                                  color: isUnread ? Colors.orange : Colors.green,
+                                                  color: isUnread
+                                                      ? Colors.orange
+                                                      : Colors.green,
                                                   fontWeight: FontWeight.w500,
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
@@ -277,7 +324,7 @@ class NotificationView extends StatelessWidget {
                       state.message,
                       style: TextStyle(
                         fontSize: AppFontSizes.bodyMedium,
-                        color: Colors.red,
+                        color: colors.danger,
                       ),
                     ),
                   );
@@ -291,7 +338,11 @@ class NotificationView extends StatelessWidget {
     );
   }
 
-  Widget _buildChip({required String label, required Color color, required Color backgroundColor}) {
+  Widget _buildChip({
+    required String label,
+    required Color color,
+    required Color backgroundColor,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
@@ -313,7 +364,10 @@ class NotificationView extends StatelessWidget {
     if (dateStr == null || dateStr.isEmpty) return 'غير متوفر';
     try {
       DateTime parsedDate = DateTime.parse(dateStr);
-      return intl.DateFormat('dd/MM/yyyy  hh:mm:ss a').format(parsedDate);
+      return intl.DateFormat('dd/MM/yyyy  hh:mm:ss a')
+          .format(parsedDate)
+          .replaceFirst("AM", "صباحاُ")
+          .replaceFirst("PM", "مساءً");
     } catch (e) {
       return dateStr;
     }

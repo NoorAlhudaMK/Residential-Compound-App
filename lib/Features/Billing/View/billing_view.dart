@@ -11,7 +11,14 @@ import '../../../Core/UIConstants/aivio_icon_sizes.dart';
 import '../../../Core/UIConstants/aivio_spacing.dart';
 import '../../../Data/Models/invoice_model.dart';
 import '../../Drawer/View/drawer_view.dart';
-import '../../MainPage/View/main_home_page.dart';
+import '../../MainPage/BLoC/home_bloc.dart';
+import '../../MainPage/BLoC/home_event.dart';
+import '../../Notification/BLoC/notification_bloc.dart';
+import '../../Notification/BLoC/notification_state.dart';
+import '../../Notification/View/notification_view.dart';
+import '../../Profile/BLoC/profile_bloc.dart';
+import '../../Profile/BLoC/profile_event.dart';
+import '../../Profile/BLoC/profile_state.dart';
 import '../BLoC/billing_bloc.dart';
 import '../BLoC/billing_event.dart';
 import '../BLoC/billing_state.dart';
@@ -21,77 +28,124 @@ class BillingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors();
-
     return BlocProvider(
       create: (context) =>
       BillingBloc(repository: BillingRepository())..add(LoadBills()),
-      child: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Scaffold(
-          backgroundColor: colors.scaffoldBackground,
-          appBar: _buildAppBar(colors, context),
-          body: BlocBuilder<BillingBloc, BillingState>(
-            builder: (context, state) {
-              if (state.status == BillingStatus.loading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              return Stack(
-                children: [
-                  CustomScrollView(
-                    slivers: [
-                      SliverPadding(
-                        padding: AppSpacing.allLg,
-                        sliver: SliverList(
-                          delegate: SliverChildListDelegate([
-                            _buildHeaderCard(context, state, colors),
-                            const SizedBox(height: AppSpacing.lg),
-                            _buildTabSwitcher(context, state, colors),
-                            const SizedBox(height: AppSpacing.lg),
-                            state.selectedTab == 0
-                                ? _buildUnpaidSection(context, state, colors)
-                                : _buildPaidSection(state, colors),
-                            const SizedBox(height: 150),
-                          ]),
-                        ),
+      child: BlocBuilder<ProfileBloc, ProfileState>(
+        builder: (context, profileState) {
+          final colors = AppColors();
+
+          return Directionality(
+            textDirection: TextDirection.rtl,
+            child: Scaffold(
+              backgroundColor: colors.scaffoldBackground,
+              appBar: _buildAppBar(colors, context, profileState.isDark),
+              body: BlocBuilder<BillingBloc, BillingState>(
+                builder: (context, state) {
+                  if (state.status == BillingStatus.loading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  return Stack(
+                    children: [
+                      CustomScrollView(
+                        slivers: [
+                          SliverPadding(
+                            padding: AppSpacing.allLg,
+                            sliver: SliverList(
+                              delegate: SliverChildListDelegate([
+                                _buildHeaderCard(context, state, colors),
+                                const SizedBox(height: AppSpacing.lg),
+                                _buildTabSwitcher(context, state, colors),
+                                const SizedBox(height: AppSpacing.lg),
+                                state.selectedTab == 0
+                                    ? _buildUnpaidSection(context, state, colors)
+                                    : _buildPaidSection(state, colors),
+                                const SizedBox(height: 150),
+                              ]),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-                ],
+                  );
+                },
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(AppColors colors, BuildContext context, bool isDark) => AppBar(
+    backgroundColor: colors.scaffoldBackground,
+    elevation: 0.0,
+    scrolledUnderElevation: 0.0,
+    centerTitle: true,
+    automaticallyImplyLeading: false,
+    automaticallyImplyActions: false,
+    leading: Padding(
+      padding: EdgeInsets.only(top: AppSpacing.sm, right: AppSpacing.sm),
+      child: Image.asset(
+        isDark
+            ? "assets/images/aivio_logo_white.png"
+            : "assets/images/aivio_logo_black.png",
+        scale: 4,
+      ),
+    ),
+    leadingWidth: MediaQuery.of(context).size.width * .25,
+    actions: [
+      Padding(
+        padding: EdgeInsets.only(
+          left: AppSpacing.sm,
+          top: AppSpacing.sm,
+        ),
+        child: GestureDetector(
+          onTap: () {
+            context.read<ProfileBloc>().add(
+              ToggleThemeEvent(!isDark),
+            );
+            context.read<HomeBloc>().add(ChangeTabEvent(3));
+          },
+          child: _buildCustomButton(
+            isDark
+                ? Icons.light_mode_outlined
+                : Icons.dark_mode_outlined,
+            false,
+            colors,
+          ),
+        ),
+      ),
+      SizedBox(width: AppSpacing.sm),
+      Padding(
+        padding: EdgeInsets.only(left: AppSpacing.sm, top: AppSpacing.sm),
+        child: GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const NotificationView(),
+            ),
+          ),
+          child: BlocBuilder<NotificationBloc, NotificationState>(
+            builder: (context, state) {
+              bool hasUnread = false;
+
+              if (state is NotificationLoaded) {
+                hasUnread = state.notifications.any(
+                      (notification) => notification.readDate == null,
+                );
+              }
+
+              return _buildCustomButton(
+                Icons.notifications_none_rounded,
+                hasUnread,
+                colors,
               );
             },
           ),
         ),
       ),
-    );
-  }
-
-  AppBar _buildAppBar(AppColors colors, BuildContext context) => AppBar(
-    backgroundColor: colors.scaffoldBackground,
-    elevation: 0,
-    scrolledUnderElevation: 0.0,
-    title: Text(
-      "الفــواتــيــر والــمــدفــوعــات",
-      style: TextStyle(
-        color: colors.textMain,
-        fontWeight: FontWeight.bold,
-        fontSize: AppFontSizes.headingSmall,
-      ),
-    ),
-    centerTitle: true,
-    automaticallyImplyLeading: false,
-    automaticallyImplyActions: false,
-    leading: IconButton(
-      icon: Icon(Icons.menu, size: AppIconSizes.md, color: colors.textMain),
-      onPressed: () {
-        showDrawer(
-          context,
-          builder: (context) {
-            return AppDrawer();
-          },
-        );
-      },
-    ),
+    ],
   );
 
   Widget _buildHeaderCard(BuildContext context, BillingState state, AppColors colors) => Container(
@@ -106,10 +160,10 @@ class BillingView extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               "إجمالي الفواتير المستحقة",
               style: TextStyle(
-                color: Colors.white70,
+                color: Colors.white,
                 fontSize: AppFontSizes.bodySmall,
               ),
             ),
@@ -117,8 +171,8 @@ class BillingView extends StatelessWidget {
               onPressed: () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const PaymentsView()));
               },
-              icon: const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 14),
-              label: const Text(
+              icon: Icon(Icons.arrow_forward_ios, color: Colors.white, size: 14),
+              label: Text(
                 "سجل الدفعات",
                 style: TextStyle(color: Colors.white, fontSize: AppFontSizes.bodySmall),
               ),
@@ -128,7 +182,7 @@ class BillingView extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         Text(
           "${formatNumber(double.parse(state.totalUnpaidAmount.toString()))} د.ع",
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
             fontSize: AppFontSizes.displayLarge,
             fontWeight: FontWeight.bold,
@@ -168,7 +222,7 @@ class BillingView extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         decoration: BoxDecoration(
-          color: isActive ? Colors.white : Colors.transparent,
+          color: isActive ? colors.tabFill : Colors.transparent,
           borderRadius: AppRadius.mdRadius,
         ),
         child: Text(
@@ -195,7 +249,7 @@ class BillingView extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       padding: AppSpacing.allMd,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.inputFill,
         borderRadius: AppRadius.lgRadius,
         border: Border.all(
           color: isSelected ? colors.primary : Colors.transparent,
@@ -203,13 +257,6 @@ class BillingView extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Checkbox(
-          //   value: isSelected,
-          //   activeColor: colors.primary,
-          //   onChanged: (_) => context.read<BillingBloc>().add(
-          //     ToggleBillSelection(bill.id.toString()),
-          //   ),
-          // ),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,7 +300,7 @@ class BillingView extends StatelessWidget {
         padding: AppSpacing.allMd,
         margin: const EdgeInsets.only(bottom: AppSpacing.sm),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.inputFill,
           borderRadius: AppRadius.lgRadius,
         ),
         child: Row(
@@ -294,6 +341,43 @@ class BillingView extends StatelessWidget {
               (bill) => _buildUnpaidBillCard(context, bill, state, colors),
         ),
       ],
+    );
+  }
+
+  Widget _buildCustomButton(IconData icon, bool hasNotification, AppColors colors) {
+    return Container(
+      width: AppIconSizes.xl,
+      height: AppIconSizes.xl,
+      decoration: BoxDecoration(
+        color: colors.inputFill,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Icon(icon, color: colors.textMain, size: AppIconSizes.md),
+          if (hasNotification)
+            Positioned(
+              top: 16,
+              right: 16,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: colors.danger,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

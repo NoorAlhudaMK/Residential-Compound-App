@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../../../../Data/Models/maintenance_category_model.dart';
 import '../../../../Data/Models/maintenance_ticket_model.dart';
 import '../../../../Data/Models/status_model.dart';
 
@@ -11,6 +12,9 @@ class MaintenanceState {
   final int currentPage;
   final String selectedStatusFilter;
   final String searchQuery;
+
+  final int? selectedCategoryId;
+  final List<MaintenanceCategoryModel> categories;
 
   final int currentStep;
   final String descriptionText;
@@ -28,6 +32,8 @@ class MaintenanceState {
     this.currentPage = 1,
     this.selectedStatusFilter = 'open',
     this.searchQuery = '',
+    this.selectedCategoryId,
+    this.categories = const [],
     this.currentStep = 1,
     this.descriptionText = "",
     this.rating = 0,
@@ -45,6 +51,8 @@ class MaintenanceState {
     int? currentPage,
     String? selectedStatusFilter,
     String? searchQuery,
+    int? selectedCategoryId,
+    List<MaintenanceCategoryModel>? categories,
     int? currentStep,
     String? descriptionText,
     int? rating,
@@ -61,6 +69,8 @@ class MaintenanceState {
       currentPage: currentPage ?? this.currentPage,
       selectedStatusFilter: selectedStatusFilter ?? this.selectedStatusFilter,
       searchQuery: searchQuery ?? this.searchQuery,
+      selectedCategoryId: selectedCategoryId ?? this.selectedCategoryId,
+      categories: categories ?? this.categories,
       currentStep: currentStep ?? this.currentStep,
       descriptionText: descriptionText ?? this.descriptionText,
       rating: rating ?? this.rating,

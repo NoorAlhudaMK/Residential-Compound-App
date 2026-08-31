@@ -56,7 +56,7 @@ class MaintenanceRepository {
 
   Future<List<MaintenanceTicketModel>> getTickets({
     required String token,
-    String status = 'open',
+    String status = '',
     String search = '',
     int page = 1,
     int perPage = 20,

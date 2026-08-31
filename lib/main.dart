@@ -27,9 +27,13 @@ import 'Features/MainPage/BLoC/home_bloc.dart';
 import 'Features/MainPage/View/main_home_page.dart';
 import 'Features/Maintenance/ViewMaintenance/BLoC/maintenance_bloc.dart';
 import 'Features/Maintenance/ViewMaintenance/BLoC/maintenance_event.dart';
+import 'Features/Market/BLoC/market_bloc.dart';
 import 'Features/Notification/BLoC/notification_bloc.dart';
 import 'Features/Notification/BLoC/notification_event.dart';
 import 'Features/Payments/BLoC/payments_bloc.dart';
+import 'Features/Profile/BLoC/profile_bloc.dart';
+import 'Features/Profile/BLoC/profile_event.dart';
+import 'Features/Settings/BLoC/setting_bloc.dart';
 import 'Features/Visitors/ViewVisitors/BLoC/visitors_bloc.dart';
 import 'Features/Visitors/ViewVisitors/BLoC/visitors_event.dart';
 import 'firebase_options.dart';
@@ -139,12 +143,52 @@ class MyApp extends StatelessWidget {
           NotificationBloc(NotificationRepository())
             ..add(LoadNotifications()),
         ),
+        BlocProvider<SettingsBloc>(create: (context) => SettingsBloc()),
+
+        BlocProvider(
+          create: (context) => ProfileBloc()..add(LoadThemeEvent()),
+        ),
+
+        BlocProvider<MarketBloc>(create: (context) => MarketBloc()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Residential Compound App',
         theme: ThemeData(
           useMaterial3: true,
+          progressIndicatorTheme: ProgressIndicatorThemeData(
+            color: AppColors().primary,
+          ),
+          datePickerTheme: DatePickerThemeData(
+            headerBackgroundColor: AppColors().primary,
+            headerForegroundColor: Colors.white,
+            backgroundColor: AppColors().scaffoldBackground,
+            dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return AppColors().primary;
+              }
+              return null;
+            }),
+            dayForegroundColor: WidgetStateProperty.all(AppColors().textMain),
+            confirmButtonStyle: ButtonStyle(
+              foregroundColor: WidgetStateProperty.all(AppColors().textMain),
+            ),
+            cancelButtonStyle: ButtonStyle(
+              foregroundColor: WidgetStateProperty.all(AppColors().textMain),
+            ),
+          ),
+          timePickerTheme: TimePickerThemeData(
+            backgroundColor: AppColors().scaffoldBackground,
+            hourMinuteColor: AppColors().inputFill,
+            dialBackgroundColor: AppColors().inputFill,
+            dialTextColor: AppColors().textMain,
+            confirmButtonStyle: ButtonStyle(
+              foregroundColor: WidgetStateProperty.all(AppColors().textMain),
+            ),
+            cancelButtonStyle:  ButtonStyle(
+                foregroundColor: WidgetStateProperty.all(AppColors().textMain),
+            ),
+          ),
           textTheme: TextTheme(
             bodyLarge: TextStyle(color: AppColors().textMain),
             bodyMedium: TextStyle(color: AppColors().textMain),
@@ -153,6 +197,8 @@ class MyApp extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
+          primaryColor: AppColors().primary,
+          fontFamily: 'IBMPlexSansArabic',
         ),
         home: isLoggedIn ? const MainHomePage() : const ResidentIntroScreen(),
       ),

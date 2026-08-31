@@ -100,7 +100,7 @@ class AppDrawer extends StatelessWidget {
 
         return Drawer(
           child: Container(
-            color: Colors.white,
+            color: AppColors().scaffoldBackground,
             child: SafeArea(
               child: Column(
                 children: [
@@ -112,12 +112,29 @@ class AppDrawer extends StatelessWidget {
                     ),
                     accountEmail: Text(
                       userEmail,
-                      style: const TextStyle(fontSize: AppFontSizes.bodyMedium),
+                      style: TextStyle(
+                        fontSize: AppFontSizes.bodyMedium,
+                        color: AppColors().textMain,
+                      ),
                     ),
                     currentAccountPicture: const CircleAvatar(
                       backgroundColor: Colors.white,
-                      child: Icon(Icons.person, size: 30, color: Colors.blueGrey),
+                      child: Icon(
+                        Icons.person,
+                        size: 30,
+                        color: Colors.blueGrey,
+                      ),
                     ),
+                    onDetailsPressed: () {
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => ProfileAndSettingsScreen(
+                      //
+                      //     ),
+                      //   ),
+                      // );
+                    },
                   ),
                   Expanded(
                     child: SingleChildScrollView(
@@ -125,11 +142,16 @@ class AppDrawer extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           ListTile(
-                            leading: Icon(Icons.home_outlined, size: AppIconSizes.md,),
+                            leading: Icon(
+                              Icons.home_outlined,
+                              size: AppIconSizes.md,
+                              color: AppColors().textMain,
+                            ),
                             title: Text(
                               'الرئيسية',
                               style: TextStyle(
-                                  fontSize: AppFontSizes.bodyMedium,
+                                fontSize: AppFontSizes.bodyMedium,
+                                color: AppColors().textMain,
                               ),
                             ),
                             onTap: () {
@@ -138,10 +160,17 @@ class AppDrawer extends StatelessWidget {
                             },
                           ),
                           ListTile(
-                            leading: const Icon(Icons.security_outlined, size: AppIconSizes.md),
-                            title: const Text(
+                            leading: Icon(
+                              Icons.security_outlined,
+                              size: AppIconSizes.md,
+                              color: AppColors().textMain,
+                            ),
+                            title: Text(
                               'الزوار',
-                              style: TextStyle(fontSize: AppFontSizes.bodyMedium),
+                              style: TextStyle(
+                                fontSize: AppFontSizes.bodyMedium,
+                                color: AppColors().textMain,
+                              ),
                             ),
                             onTap: () {
                               Navigator.pop(context);
@@ -149,10 +178,17 @@ class AppDrawer extends StatelessWidget {
                             },
                           ),
                           ListTile(
-                            leading: const Icon(Icons.build_outlined, size: AppIconSizes.md),
-                            title: const Text(
+                            leading: Icon(
+                              Icons.build_outlined,
+                              size: AppIconSizes.md,
+                              color: AppColors().textMain,
+                            ),
+                            title: Text(
                               'الصيانة',
-                              style: TextStyle(fontSize: AppFontSizes.bodyMedium),
+                              style: TextStyle(
+                                fontSize: AppFontSizes.bodyMedium,
+                                color: AppColors().textMain,
+                              ),
                             ),
                             onTap: () {
                               Navigator.pop(context);
@@ -160,10 +196,17 @@ class AppDrawer extends StatelessWidget {
                             },
                           ),
                           ListTile(
-                            leading: const Icon(Icons.receipt_long_outlined, size: AppIconSizes.md),
-                            title: const Text(
+                            leading: Icon(
+                              Icons.receipt_long_outlined,
+                              size: AppIconSizes.md,
+                              color: AppColors().textMain,
+                            ),
+                            title: Text(
                               'الفواتير',
-                              style: TextStyle(fontSize: AppFontSizes.bodyMedium),
+                              style: TextStyle(
+                                fontSize: AppFontSizes.bodyMedium,
+                                color: AppColors().textMain,
+                              ),
                             ),
                             onTap: () {
                               Navigator.pop(context);
@@ -172,10 +215,17 @@ class AppDrawer extends StatelessWidget {
                           ),
                           const Divider(height: 10),
                           ListTile(
-                            leading: const Icon(Icons.qr_code, size: AppIconSizes.md),
-                            title: const Text(
+                            leading: Icon(
+                              Icons.qr_code,
+                              size: AppIconSizes.md,
+                              color: AppColors().textMain,
+                            ),
+                            title: Text(
                               'إضافة تصريح دخول',
-                              style: TextStyle(fontSize: AppFontSizes.bodyMedium),
+                              style: TextStyle(
+                                fontSize: AppFontSizes.bodyMedium,
+                                color: AppColors().textMain,
+                              ),
                             ),
                             onTap: () {
                               Navigator.push(
@@ -187,47 +237,72 @@ class AppDrawer extends StatelessWidget {
                             },
                           ),
                           ListTile(
-                            leading: const Icon(Icons.build_outlined, size: AppIconSizes.md),
-                            title: const Text(
+                            leading: Icon(
+                              Icons.build_outlined,
+                              size: AppIconSizes.md,
+                              color: AppColors().textMain,
+                            ),
+                            title: Text(
                               'إضافة طلب صيانة',
-                              style: TextStyle(fontSize: AppFontSizes.bodyMedium),
+                              style: TextStyle(
+                                fontSize: AppFontSizes.bodyMedium,
+                                color: AppColors().textMain,
+                              ),
                             ),
                             onTap: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => NewMaintenanceRequestView(),
+                                  builder: (context) =>
+                                      NewMaintenanceRequestView(),
                                 ),
                               );
                             },
                           ),
                           const Divider(height: 10),
                           ListTile(
-                            leading: const Icon(Icons.notifications_outlined, size: AppIconSizes.md),
-                            title: const Text(
+                            leading: Icon(
+                              Icons.notifications_outlined,
+                              size: AppIconSizes.md,
+                              color: AppColors().textMain,
+                            ),
+                            title: Text(
                               'الإشعارات',
-                              style: TextStyle(fontSize: AppFontSizes.bodyMedium),
+                              style: TextStyle(
+                                fontSize: AppFontSizes.bodyMedium,
+                                color: AppColors().textMain,
+                              ),
                             ),
                             onTap: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const NotificationView(),
+                                  builder: (context) =>
+                                      const NotificationView(),
                                 ),
                               );
                             },
                           ),
                           ListTile(
-                            leading: const Icon(Icons.info_outline, size: AppIconSizes.md),
-                            title: const Text(
+                            leading: Icon(
+                              Icons.info_outline,
+                              size: AppIconSizes.md,
+                              color: AppColors().textMain,
+                            ),
+                            title: Text(
                               'حول التطبيق',
-                              style: TextStyle(fontSize: AppFontSizes.bodyMedium),
+                              style: TextStyle(
+                                fontSize: AppFontSizes.bodyMedium,
+                                color: AppColors().textMain,
+                              ),
                             ),
                             onTap: () {
                               Navigator.pop(context);
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => AboutAppPage()),
+                                MaterialPageRoute(
+                                  builder: (context) => AboutAppPage(),
+                                ),
                               );
                             },
                           ),
@@ -237,7 +312,11 @@ class AppDrawer extends StatelessWidget {
                   ),
                   const Divider(height: 10),
                   ListTile(
-                    leading: const Icon(Icons.logout, size: AppIconSizes.md, color: Colors.red),
+                    leading: const Icon(
+                      Icons.logout,
+                      size: AppIconSizes.md,
+                      color: Colors.red,
+                    ),
                     title: const Text(
                       'تسجيل الخروج',
                       style: TextStyle(color: Colors.red),
