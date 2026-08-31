@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
+import 'package:residential_compound_app/Core/Colors/app_colors.dart';
 
 import '../../Auth/View/login_view.dart';
 
 class ResidentIntroScreen extends StatelessWidget {
   const ResidentIntroScreen({super.key});
 
+  
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color(0xFF6C63FF);
-
+    AppColors colors = AppColors();
+    
     return SafeArea(
       child: Directionality(
         textDirection: TextDirection.rtl,
@@ -25,13 +27,13 @@ class ResidentIntroScreen extends StatelessWidget {
                   width: 120,
                   height: 120,
                   decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.1),
+                    color: colors.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.home_rounded,
                     size: 70,
-                    color: primaryColor,
+                    color: colors.primary,
                   ),
                 ),
               ),
@@ -66,11 +68,11 @@ class ResidentIntroScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              image: const Center(
+              image: Center(
                 child: Icon(
                   Icons.receipt_long_rounded,
                   size: 80,
-                  color: primaryColor,
+                  color: colors.primary,
                 ),
               ),
               decoration: const PageDecoration(
@@ -87,11 +89,11 @@ class ResidentIntroScreen extends StatelessWidget {
             PageViewModel(
               title: "فتح البوابات والدخول الذكي",
               body: "إمكانية الدخول عبر رمز الاستجابة السريعة (QR) أو تقنية (NFC) وفق الصلاحيات المعتمدة للساكن بكل أمان وسهولة.",
-              image: const Center(
+              image: Center(
                 child: Icon(
                   Icons.qr_code_scanner_rounded,
                   size: 80,
-                  color: primaryColor,
+                  color: colors.primary,
                 ),
               ),
               decoration: const PageDecoration(
@@ -125,11 +127,11 @@ class ResidentIntroScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              image: const Center(
+              image: Center(
                 child: Icon(
                   Icons.notifications_active_rounded,
                   size: 80,
-                  color: primaryColor,
+                  color: colors.primary,
                 ),
               ),
               decoration: const PageDecoration(
@@ -149,10 +151,10 @@ class ResidentIntroScreen extends StatelessWidget {
             "تخطي",
             style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
           ),
-          next: const Icon(Icons.arrow_forward_ios, color: primaryColor, size: 18),
-          done: const Text(
+          next: Icon(Icons.arrow_forward_ios, color: colors.primary, size: 18),
+          done: Text(
             "ابدأ الان",
-            style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
+            style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold),
           ),
           onDone: () {
             Navigator.pushReplacement(
@@ -169,7 +171,7 @@ class ResidentIntroScreen extends StatelessWidget {
           dotsDecorator: DotsDecorator(
             size: const Size.square(10.0),
             activeSize: const Size(22.0, 10.0),
-            activeColor: primaryColor,
+            activeColor: colors.primary,
             color: Colors.black26,
             spacing: const EdgeInsets.symmetric(horizontal: 4.0),
             activeShape: RoundedRectangleBorder(

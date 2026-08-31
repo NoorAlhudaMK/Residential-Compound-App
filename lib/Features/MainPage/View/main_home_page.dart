@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:residential_compound_app/Features/Billing/View/billing_view.dart';
 import 'package:stylish_bottom_bar/stylish_bottom_bar.dart';
 import '../../../Core/Colors/app_colors.dart';
+import '../../Billing/View/billing_view.dart';
 import '../../Dashboard/View/dashboard_view.dart';
 import '../../Maintenance/ViewMaintenance/View/maintenance_view.dart';
-import '../../Visitors/ViewVisitors/View/visitors_view.dart';
+import '../../Market/View/market_view.dart';
+import '../../Market/Bloc/market_bloc.dart';
+import '../../Market/Bloc/market_state.dart';
+import '../../Profile/BLoC/profile_bloc.dart';
+import '../../Profile/BLoC/profile_state.dart';
+import '../../Settings/View/setting_view.dart';
 import '../BLoC/home_bloc.dart';
 import '../BLoC/home_event.dart';
 import '../BLoC/home_state.dart';
@@ -18,69 +23,122 @@ class MainHomePage extends StatefulWidget {
 }
 
 class _MainHomePageState extends State<MainHomePage> {
-  final List<Widget> _pages = [
-    DashboardView(),
-    VisitorView(),
-    MaintenanceView(),
-    BillingView(),
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors();
+    return BlocProvider(
+      create: (context) => MarketBloc(),
+      child: BlocBuilder<ProfileBloc, ProfileState>(
+        builder: (context, profileState) {
+          final colors = AppColors();
 
-    return BlocBuilder<HomeBloc, HomeState>(
-      builder: (context, state) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: SafeArea(
-            child: Scaffold(
-              backgroundColor: colors.scaffoldBackground,
-              body: _pages[state.currentIndex],
-              bottomNavigationBar: StylishBottomBar(
-                option: DotBarOptions(
-                  dotStyle: DotStyle.tile,
-                  gradient: LinearGradient(
-                    colors: [colors.primary, colors.primary.withOpacity(0.6)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+          final TextStyle labelStyle = TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: colors.bottomBarIcon,
+          );
+
+          Icon _buildIcon(IconData iconData, Color color) {
+            return Icon(iconData, color: color, size: 22);
+          }
+
+          final Color defaultIconColor = colors.bottomBarIcon.withOpacity(0.8);
+
+          return BlocBuilder<HomeBloc, HomeState>(
+            builder: (context, homeState) {
+              final List<Widget> pages = [
+                DashboardView(),
+                MaintenanceView(),
+                MarketScreen(),
+                BillingView(),
+                ProfileAndSettingsScreen(),
+              ];
+
+              return Directionality(
+                textDirection: TextDirection.rtl,
+                child: SafeArea(
+                  child: Scaffold(
+                    backgroundColor: colors.scaffoldBackground,
+                    body: pages[homeState.currentIndex],
+                    bottomNavigationBar: StylishBottomBar(
+                      option: DotBarOptions(
+                        dotStyle: DotStyle.tile,
+                        gradient: LinearGradient(
+                          colors: [colors.bottomBarIcon, colors.bottomBarIcon.withOpacity(0.6)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      backgroundColor: colors.inputFill,
+                      items: [
+                        BottomBarItem(
+                          icon: _buildIcon(Icons.home_outlined, defaultIconColor),
+                          selectedIcon: _buildIcon(Icons.home, defaultIconColor),
+                          title: Text('الرئيسية', style: labelStyle),
+                          backgroundColor: colors.bottomBarIcon,
+                        ),
+                        BottomBarItem(
+                          icon: _buildIcon(Icons.build_outlined, defaultIconColor),
+                          selectedIcon: _buildIcon(Icons.build, defaultIconColor),
+                          title: Text('الخدمات', style: labelStyle),
+                          backgroundColor: colors.bottomBarIcon,
+                        ),
+                        BottomBarItem(
+                          icon: BlocBuilder<MarketBloc, MarketState>(
+                            builder: (context, marketState) {
+                              int totalCartItems = 0;
+                              if (marketState is MarketLoaded) {
+                                totalCartItems = marketState.cartItems.length;
+                              }
+                              return Badge(
+                                isLabelVisible: totalCartItems > 0,
+                                label: Text('$totalCartItems'),
+                                backgroundColor: colors.bottomBarIcon,
+                                child: _buildIcon(Icons.card_travel_outlined, defaultIconColor),
+                              );
+                            },
+                          ),
+                          selectedIcon: BlocBuilder<MarketBloc, MarketState>(
+                            builder: (context, marketState) {
+                              int totalCartItems = 0;
+                              if (marketState is MarketLoaded) {
+                                totalCartItems = marketState.cartItems.length;
+                              }
+                              return Badge(
+                                isLabelVisible: totalCartItems > 0,
+                                label: Text('$totalCartItems'),
+                                backgroundColor: colors.bottomBarIcon,
+                                child: _buildIcon(Icons.card_travel_outlined, defaultIconColor),
+                              );
+                            },
+                          ),
+                          title: Text('المتجر', style: labelStyle),
+                          backgroundColor: colors.bottomBarIcon,
+                        ),
+                        BottomBarItem(
+                          icon: _buildIcon(Icons.receipt_long_outlined, defaultIconColor),
+                          selectedIcon: _buildIcon(Icons.receipt_long, defaultIconColor),
+                          title: Text('الفواتير', style: labelStyle),
+                          backgroundColor: colors.bottomBarIcon,
+                        ),
+                        BottomBarItem(
+                          icon: _buildIcon(Icons.menu, defaultIconColor),
+                          selectedIcon: _buildIcon(Icons.menu, defaultIconColor),
+                          title: Text('المزيد', style: labelStyle),
+                          backgroundColor: colors.bottomBarIcon,
+                        ),
+                      ],
+                      currentIndex: homeState.currentIndex,
+                      onTap: (index) {
+                        context.read<HomeBloc>().add(ChangeTabEvent(index));
+                      },
+                    ),
                   ),
                 ),
-                items: [
-                  BottomBarItem(
-                    icon: Icon(Icons.home_outlined, color: colors.primary.withOpacity(0.8), size: 22),
-                    selectedIcon: Icon(Icons.home, color: colors.primary.withOpacity(0.8), size: 22),
-                    title: const Text('الرئيسية', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                    backgroundColor: colors.primary,
-                  ),
-                  BottomBarItem(
-                    icon: Icon(Icons.security_outlined, color: colors.primary.withOpacity(0.8), size: 22),
-                    selectedIcon: Icon(Icons.security, color: colors.primary.withOpacity(0.8), size: 22),
-                    title: const Text('الزوار', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                    backgroundColor: colors.primary,
-                  ),
-                  BottomBarItem(
-                    icon: Icon(Icons.build_outlined, color: colors.primary.withOpacity(0.8), size: 22),
-                    selectedIcon: Icon(Icons.build, color: colors.primary.withOpacity(0.8), size: 22),
-                    title: const Text('الصيانة', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                    backgroundColor: colors.primary,
-                  ),
-                  BottomBarItem(
-                    icon: Icon(Icons.receipt_long_outlined, color: colors.primary.withOpacity(0.8), size: 22),
-                    selectedIcon: Icon(Icons.receipt_long, color: colors.primary.withOpacity(0.8), size: 22),
-                    title: const Text('الفواتير', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                    backgroundColor: colors.primary,
-                  ),
-                ],
-                currentIndex: state.currentIndex,
-                onTap: (index) {
-                  context.read<HomeBloc>().add(ChangeTabEvent(index));
-                },
-              ),
-            ),
-          ),
-        );
-      },
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

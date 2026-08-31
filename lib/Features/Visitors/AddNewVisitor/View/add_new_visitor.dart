@@ -25,7 +25,6 @@ class AddNewVisitorView extends StatelessWidget {
   final TextEditingController companionsController = TextEditingController();
   final TextEditingController carPlateController = TextEditingController();
 
-  // متغير لتخزين رقم الهاتف بصيغته الصحيحة بدون تكرار رمز الدولة
   String fullPhoneNumber = '';
 
   AddNewVisitorView({super.key});
@@ -66,7 +65,7 @@ class AddNewVisitorView extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text("خطأ: ${state.errorMessage}"),
-                backgroundColor: Colors.red,
+                backgroundColor: colors.danger,
                 duration: const Duration(seconds: 4),
               ),
             );
@@ -77,33 +76,42 @@ class AddNewVisitorView extends StatelessWidget {
             child: Directionality(
               textDirection: TextDirection.rtl,
               child: Scaffold(
-                backgroundColor: const Color(0xFFF9FAFB),
+                backgroundColor: colors.scaffoldBackground,
                 appBar: AppBar(
                   backgroundColor: Colors.transparent,
                   elevation: 0,
+                  centerTitle: true,
                   title: Text(
-                    "الأمن والزوار",
+                    'إضافة زائر',
                     style: TextStyle(
                       color: colors.textMain,
                       fontWeight: FontWeight.bold,
-                      fontSize: AppFontSizes.headingSmall,
+                      fontSize: 18,
                     ),
                   ),
-                  centerTitle: true,
+                  leading: IconButton(
+                    icon: Container(
+                      padding: AppSpacing.allSm,
+                      decoration: BoxDecoration(
+                        color: colors.inputFill,
+                        borderRadius: AppRadius.mdRadius,
+                        border: Border.all(color: colors.inputBorder),
+                      ),
+                      child: Icon(
+                        Icons.arrow_back_outlined,
+                        color: colors.textMain,
+                        size: AppIconSizes.md,
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  automaticallyImplyActions: false,
                   automaticallyImplyLeading: false,
-                  leading: GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Icon(
-                      Icons.arrow_back_ios_new,
-                      size: AppIconSizes.md,
-                      color: colors.textMain,
-                    ),
-                  ),
                 ),
                 body: Column(
                   children: [
                     Container(
-                      color: const Color(0xFFF9FAFB),
+                      color: colors.scaffoldBackground,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       child: SmartStepper(
                         currentStep: state.currentStep,
@@ -139,8 +147,8 @@ class AddNewVisitorView extends StatelessWidget {
                 ),
                 bottomNavigationBar: Container(
                   padding: EdgeInsets.all(AppSpacing.lg),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
+                  decoration: BoxDecoration(
+                    color: colors.inputFill,
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black12,
@@ -293,13 +301,13 @@ class AddNewVisitorView extends StatelessWidget {
       icon: Icons.person_outline,
       colors: colors,
       children: [
-        _label("اسم الزائر الثلاثي *"),
+        _label("اسم الزائر الثلاثي *", colors),
         TextField(
           controller: nameController,
           decoration: _inputDecoration("مثال: علي حسن محمد", colors, Icons.person),
         ),
         SizedBox(height: AppSpacing.md),
-        _label("رقم الهاتف *"),
+        _label("رقم الهاتف *", colors),
         Directionality(
           textDirection: TextDirection.ltr,
           child: Container(
@@ -345,7 +353,7 @@ class AddNewVisitorView extends StatelessWidget {
           ),
         ),
         SizedBox(height: AppSpacing.md),
-        _label("رقم البطاقة الوطنية *"),
+        _label("رقم البطاقة الوطنية *", colors),
         TextField(
           controller: nationalIdController,
           keyboardType: TextInputType.number,
@@ -363,7 +371,7 @@ class AddNewVisitorView extends StatelessWidget {
       icon: Icons.event_note_outlined,
       colors: colors,
       children: [
-        _label("سبب الزيارة *"),
+        _label("سبب الزيارة *", colors),
         TextField(
           controller: reasonController,
           decoration: _inputDecoration("مثال: زيارة عائلية", colors, Icons.info_outline),
@@ -375,8 +383,8 @@ class AddNewVisitorView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _label("التاريخ"),
-                  SizedBox(width: double.infinity, child: _buildDatePicker(context, state)),
+                  _label("التاريخ", colors),
+                  SizedBox(width: double.infinity, child: _buildDatePicker(context, state, colors)),
                 ],
               ),
             ),
@@ -385,8 +393,8 @@ class AddNewVisitorView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _label("الوقت (اختياري)"),
-                  SizedBox(width: double.infinity, child: _buildTimePicker(context, state)),
+                  _label("الوقت (اختياري)", colors),
+                  SizedBox(width: double.infinity, child: _buildTimePicker(context, state, colors)),
                 ],
               ),
             ),
@@ -404,7 +412,7 @@ class AddNewVisitorView extends StatelessWidget {
           icon: Icons.group_outlined,
           colors: colors,
           children: [
-            _label("عدد المرافقين"),
+            _label("عدد المرافقين", colors),
             TextField(
               controller: companionsController,
               keyboardType: TextInputType.number,
@@ -426,7 +434,7 @@ class AddNewVisitorView extends StatelessWidget {
             ),
             if (state.hasCar) ...[
               SizedBox(height: AppSpacing.sm),
-              _label("رقم لوحة السيارة"),
+              _label("رقم لوحة السيارة", colors),
               TextField(
                 controller: carPlateController,
                 decoration: _inputDecoration("مثال: 12345 بغداد", colors, Icons.numbers),
@@ -467,11 +475,12 @@ class AddNewVisitorView extends StatelessWidget {
     );
   }
 
-  Widget _label(String text) => Padding(
+  Widget _label(String text, AppColors colors) => Padding(
     padding: EdgeInsets.only(bottom: AppSpacing.md),
     child: Text(
       text,
       style: TextStyle(
+        color: colors.textMain,
         fontWeight: FontWeight.w400,
         fontSize: AppFontSizes.bodyMedium,
       ),
@@ -495,7 +504,7 @@ class AddNewVisitorView extends StatelessWidget {
         ),
       );
 
-  Widget _buildDatePicker(BuildContext context, AddVisitorState state) {
+  Widget _buildDatePicker(BuildContext context, AddVisitorState state, AppColors colors) {
     return InkWell(
       onTap: () async {
         DateTime? picked = await showDatePicker(
@@ -503,6 +512,7 @@ class AddNewVisitorView extends StatelessWidget {
           initialDate: state.selectedDate,
           firstDate: DateTime.now(),
           lastDate: DateTime(2027),
+          barrierColor: colors.inputFill,
         );
         if (picked != null) {
           final DateTime newDateTime = DateTime(
@@ -520,9 +530,10 @@ class AddNewVisitorView extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.inputFill,
           borderRadius: AppRadius.mdRadius,
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          border: Border.all(color: colors.inputBorder,
+          ),
         ),
         child: Text(
           intl.DateFormat('yyyy/MM/dd').format(state.selectedDate),
@@ -532,7 +543,7 @@ class AddNewVisitorView extends StatelessWidget {
     );
   }
 
-  Widget _buildTimePicker(BuildContext context, AddVisitorState state) {
+  Widget _buildTimePicker(BuildContext context, AddVisitorState state, AppColors colors) {
     return InkWell(
       onTap: () async {
         TimeOfDay? picked = await showTimePicker(
@@ -556,9 +567,9 @@ class AddNewVisitorView extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(AppSpacing.md),
         decoration:  BoxDecoration(
-            color: Colors.white,
+            color: colors.inputFill,
             borderRadius: AppRadius.mdRadius,
-            border: Border.all(color: const Color(0xFFE5E7EB),
+            border: Border.all(color: colors.inputBorder,
         ),
         ),
         child: Text(

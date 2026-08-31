@@ -9,8 +9,7 @@ class MaintenanceBloc extends Bloc<MaintenanceEvent, MaintenanceState> {
   final MaintenanceRepository repository;
 
   MaintenanceBloc({required this.repository})
-      : super(MaintenanceState(isLoading: true)) {
-
+    : super(MaintenanceState(isLoading: true)) {
     on<LoadMaintenanceData>(_onLoadMaintenanceData);
     on<SearchMaintenance>(_onSearchMaintenance);
     on<UpdateRating>(_onUpdateRating);
@@ -21,12 +20,14 @@ class MaintenanceBloc extends Bloc<MaintenanceEvent, MaintenanceState> {
     on<UpdateDescriptionText>(_onUpdateDescriptionText);
     on<AddImage>(_onAddImage);
     on<RemoveImage>(_onRemoveImage);
+    on<LoadCategoriesEvent>(_loadCategoriesEvent);
+    on<SelectCategory>(_selectCategory);
   }
 
   Future<void> _onLoadMaintenanceData(
-      LoadMaintenanceData event,
-      Emitter<MaintenanceState> emit,
-      ) async {
+    LoadMaintenanceData event,
+    Emitter<MaintenanceState> emit,
+  ) async {
     final status = event.status ?? state.selectedStatusFilter;
     final page = event.page ?? (event.isPagination ? state.currentPage + 1 : 1);
 
@@ -34,7 +35,14 @@ class MaintenanceBloc extends Bloc<MaintenanceEvent, MaintenanceState> {
       if (state.isMoreLoading || !state.hasMore) return;
       emit(state.copyWith(isMoreLoading: true, errorMessage: null));
     } else {
-      emit(state.copyWith(isLoading: true, errorMessage: null, selectedStatusFilter: status, currentPage: 1));
+      emit(
+        state.copyWith(
+          isLoading: true,
+          errorMessage: null,
+          selectedStatusFilter: status,
+          currentPage: 1,
+        ),
+      );
     }
 
     try {
@@ -75,9 +83,9 @@ class MaintenanceBloc extends Bloc<MaintenanceEvent, MaintenanceState> {
   }
 
   Future<void> _onSearchMaintenance(
-      SearchMaintenance event,
-      Emitter<MaintenanceState> emit,
-      ) async {
+    SearchMaintenance event,
+    Emitter<MaintenanceState> emit,
+  ) async {
     emit(state.copyWith(searchQuery: event.query, currentPage: 1));
     add(LoadMaintenanceData(page: 1));
   }
@@ -87,9 +95,9 @@ class MaintenanceBloc extends Bloc<MaintenanceEvent, MaintenanceState> {
   }
 
   Future<void> _onRateTicket(
-      RateTicket event,
-      Emitter<MaintenanceState> emit,
-      ) async {
+    RateTicket event,
+    Emitter<MaintenanceState> emit,
+  ) async {
     try {
       final token = await CacheManager.getToken();
       await repository.rateTicket(
@@ -104,13 +112,32 @@ class MaintenanceBloc extends Bloc<MaintenanceEvent, MaintenanceState> {
     }
   }
 
+  Future<void> _loadCategoriesEvent(LoadCategoriesEvent event, Emitter<MaintenanceState> emit) async {
+    emit(state.copyWith(isLoading: true, errorMessage: null));
+    try {
+      final token = await CacheManager.getToken();
+      final categoriesList = await repository.getCategories(token!);
+      emit(state.copyWith(isLoading: false, categories: categoriesList));
+    } catch (e) {
+      emit(state.copyWith(isLoading: false, errorMessage: e.toString()));
+    }
+  }
+
+  void _selectCategory(SelectCategory event, Emitter<MaintenanceState> emit) {
+  emit(state.copyWith(selectedCategoryId: event.categoryId));
+  }
+
+
   void _onNextStep(NextStepEvent event, Emitter<MaintenanceState> emit) {
     if (state.currentStep < 3) {
       emit(state.copyWith(currentStep: state.currentStep + 1));
     }
   }
 
-  void _onPreviousStep(PreviousStepEvent event, Emitter<MaintenanceState> emit) {
+  void _onPreviousStep(
+    PreviousStepEvent event,
+    Emitter<MaintenanceState> emit,
+  ) {
     if (state.currentStep > 1) {
       emit(state.copyWith(currentStep: state.currentStep - 1));
     }
@@ -121,9 +148,9 @@ class MaintenanceBloc extends Bloc<MaintenanceEvent, MaintenanceState> {
   }
 
   void _onUpdateDescriptionText(
-      UpdateDescriptionText event,
-      Emitter<MaintenanceState> emit,
-      ) {
+    UpdateDescriptionText event,
+    Emitter<MaintenanceState> emit,
+  ) {
     emit(state.copyWith(descriptionText: event.text));
   }
 
@@ -133,7 +160,8 @@ class MaintenanceBloc extends Bloc<MaintenanceEvent, MaintenanceState> {
   }
 
   void _onRemoveImage(RemoveImage event, Emitter<MaintenanceState> emit) {
-    final newList = List<File>.from(state.selectedImages)..removeAt(event.index);
+    final newList = List<File>.from(state.selectedImages)
+      ..removeAt(event.index);
     emit(state.copyWith(selectedImages: newList));
   }
 }
